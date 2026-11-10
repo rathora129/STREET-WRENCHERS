@@ -17,18 +17,21 @@ Append `?sslmode=require` when your provider requires TLS. Keep both strings out
 
 1. Import the repository into Vercel.
 2. Set the project root to this directory if the repository contains other projects.
-3. Framework preset: **Next.js**. Build command: `npm run build`. Install command: `npm install`.
+3. Framework preset: **Next.js**. Build command: `npm run vercel-build` (or leave the default — Vercel uses the `vercel-build` script automatically). Install command: `npm install`.
 4. `postinstall` runs `prisma generate` automatically.
 5. Add environment variables for Production (and Preview if needed):
 
 | Key | Value |
 | --- | --- |
 | `DATABASE_URL` | Pooled production connection string |
+| `DIRECT_URL` | Direct/unpooled production connection string — recommended for migrations |
 | `NEXT_PUBLIC_SITE_URL` | Canonical https URL, e.g. `https://www.streetwrenchers.ae` |
 | `OWNER_NAME` | Owner display name |
 | `OWNER_EMAIL` | Owner login email |
 | `OWNER_PASSWORD` | Strong unique password, 12+ characters — mark sensitive |
 | `OWNER_RESET_PASSWORD` | `false` after the first seed |
+| `SEED_ON_DEPLOY` | Optional; `true` by default. Set `false` to skip the seed during builds |
+| `SKIP_DB_MIGRATIONS` | Optional emergency switch; `true` skips migrations and seed |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary secret — mark sensitive |
@@ -37,15 +40,33 @@ Append `?sslmode=require` when your provider requires TLS. Keep both strings out
 
 Only variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. Never prefix a secret.
 
+`DIRECT_URL` is optional. When set, the deployment bootstrap uses it for `prisma migrate deploy` and the seed, which avoids transaction-pooling limitations on providers such as Neon and Supabase. When it is absent, the bootstrap falls back to `DATABASE_URL`.
+
 ## 3. Apply migrations
 
-Run migrations against the production database **before** the first deploy. Store the production credentials in an untracked file with restricted permissions rather than an inline shell command:
+Production deployments apply migrations automatically. The `vercel-build` script runs `node scripts/deploy-db.mjs`, which:
+
+1. Uses `DIRECT_URL` when present, otherwise `DATABASE_URL`.
+2. Refuses to run when a Vercel production build points at a local database host.
+3. Runs `prisma migrate deploy` — `prisma db push` is never used.
+4. Runs `prisma generate`, then `next build`.
+
+Preview deployments skip the database step; they still generate the client and build. To skip the database step on a production deployment, set `SKIP_DB_MIGRATIONS=true` for that deployment.
+
+Manual fallback — run migrations from your machine against the production database using an untracked, restricted file:
 
 ```bash
 # .env.production.local — never commit
-# DATABASE_URL="<direct production connection string>"
+# DATABASE_URL="<pooled production connection string>"
+# DIRECT_URL="<direct production connection string>"
 chmod 600 .env.production.local
 
+RUN_DB_MIGRATIONS=true node scripts/deploy-db.mjs
+```
+
+To apply migrations without generating, seeding or building:
+
+```bash
 set -a
 . ./.env.production.local
 set +a
@@ -55,13 +76,15 @@ npx prisma migrate deploy
 
 ## 4. Seed the owner and baseline content
 
-The seed is idempotent and safe to re-run. It creates the owner only if `OWNER_EMAIL` and `OWNER_PASSWORD` are present, and does not overwrite an existing password unless `OWNER_RESET_PASSWORD=true`.
+The seed is idempotent and safe to re-run. It runs automatically during production deployments (`SEED_ON_DEPLOY=true` by default). It creates the owner only if `OWNER_EMAIL` and `OWNER_PASSWORD` are present, only creates missing baseline records, and never deletes data. It does not overwrite an existing password unless `OWNER_RESET_PASSWORD=true`.
+
+To seed manually instead:
 
 ```bash
 node --env-file=.env.production.local prisma/seed.mjs
 ```
 
-Include `OWNER_EMAIL`, `OWNER_PASSWORD` and `OWNER_NAME` in that restricted file, or set them as environment variables for the single command.
+Include `OWNER_EMAIL`, `OWNER_PASSWORD` and `OWNER_NAME` in that restricted file, or set them as environment variables for the single command. If `SEED_ON_DEPLOY` is set to `false`, remember to run the seed manually after the first deploy.
 
 After seeding, confirm you can sign in at `/login`, then set `OWNER_RESET_PASSWORD=false` in Vercel.
 
@@ -72,6 +95,8 @@ Deploy through the Git integration or:
 ```bash
 vercel --prod
 ```
+
+The first production deployment creates every table through `prisma migrate deploy` and seeds the baseline content. If migrations cannot reach the database, the build fails instead of shipping an app that returns P2021 errors.
 
 No separate API or dashboard project is required.
 
@@ -108,6 +133,7 @@ Uploads go directly from the browser to Cloudinary using a signed request, then 
 ## 10. Operations notes
 
 - **Redirects** are read from PostgreSQL per request. Changes apply immediately; no redeploy is needed.
+- **Migrations** run automatically during production builds through `vercel-build`. Preview builds and local `npm run build` do not touch the database.
 - **Sessions** live in PostgreSQL, so they survive deployments. Revoke stale sessions from the security page.
 - **Connection pooling**: use the pooled URL for the app. Serverless instances open many short-lived connections.
 - **Region**: place the Vercel functions close to the database region to reduce latency.
@@ -119,7 +145,9 @@ Uploads go directly from the browser to Cloudinary using a signed request, then 
 | Symptom | Check |
 | --- | --- |
 | `DATABASE_URL is not set` during seed | The env file is not being loaded; pass `--env-file` or export the variable. |
-| Migrations fail on a pooled URL | Use the provider's direct/unpooled connection string. |
+| `P2021: table ... does not exist` | The app is connected to a database that has no migration history. Confirm Vercel's `DATABASE_URL`/`DIRECT_URL` point at the intended database, then redeploy so `vercel-build` runs `prisma migrate deploy`. |
+| Migrations fail on a pooled URL | Set `DIRECT_URL` to the provider's direct/unpooled connection string. |
+| Production build fails at the database step | The build intentionally fails rather than shipping an unmigrated app. Check database reachability from Vercel and the connection strings; use `SKIP_DB_MIGRATIONS=true` only as a temporary override. |
 | Login succeeds but the session does not persist | HTTPS, `NEXT_PUBLIC_SITE_URL`, cookie settings and proxy headers. |
 | Upload returns `503` | Cloudinary variables are missing or the app was not redeployed after adding them. |
 | Prisma client errors after deploy | `npm run build` should run `postinstall`; confirm `prisma generate` ran in the build log. |

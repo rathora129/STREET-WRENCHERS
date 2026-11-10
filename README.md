@@ -51,6 +51,7 @@ The seed is idempotent. It creates the owner only when `OWNER_EMAIL` and `OWNER_
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | PostgreSQL connection string. Use a pooled URL in production. |
+| `DIRECT_URL` | No | Direct/unpooled URL used by `prisma migrate deploy` and the seed. Falls back to `DATABASE_URL`. |
 | `NEXT_PUBLIC_SITE_URL` | Yes | Canonical site URL used for SEO, sitemaps and UTM previews. |
 | `OWNER_NAME` | No | Display name for the single owner account. |
 | `OWNER_EMAIL` | Yes (seed) | Owner login email. |
@@ -69,15 +70,19 @@ Uploads show a clear configuration error until the Cloudinary variables are set.
 | Command | Description |
 | --- | --- |
 | `npm run dev` | Start the development server. |
-| `npm run build` | Production build. |
+| `npm run build` | Production build (no database changes). |
+| `npm run vercel-build` | Vercel build: `prisma migrate deploy`, generate, seed, then `next build`. |
 | `npm start` | Run the production build locally. |
 | `npm run db:generate` | Generate the Prisma client. |
 | `npm run db:migrate` | Create/apply a development migration. |
 | `npm run db:deploy` | Apply committed migrations (production). |
+| `npm run db:bootstrap` | Run the guarded deploy script (migrations, generate, seed). |
 | `npm run db:seed` | Seed catalogue, pages, brands and the owner. |
 | `npm run db:setup` | `db:deploy` followed by `db:seed`. |
 | `npm run db:studio` | Open Prisma Studio. |
 | `npm run brand:assets` | Regenerate favicons/app icons from the brand logo. |
+
+Vercel uses `vercel-build` automatically for production deployments. It applies pending migrations and the idempotent seed before building, so a fresh database is initialised on the first deploy. Preview deployments skip the database step. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Public website
 
