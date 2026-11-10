@@ -1,0 +1,38 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# local database (dev only)
+/.pgdata/
+
+# env
+.env
+.env*.local
+.env.local
+.env.production
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / os
+.DS_Store
+.idea
+.vscode
+
+# vercel
+.vercel
+
+# misc
+*.tsbuildinfo
+/coverage
+/tmp

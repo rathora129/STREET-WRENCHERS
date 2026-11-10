@@ -1,0 +1,63 @@
+export const theme = {
+  colors: {
+    ink: '#08080a',
+    coal: '#0d0d10',
+    charcoal: '#131317',
+    surface: '#191920',
+    surfaceRaised: '#202028',
+    line: 'rgba(255, 255, 255, 0.08)',
+    lineStrong: 'rgba(255, 255, 255, 0.16)',
+    white: '#f6f5f2',
+    smoke: '#cbc8c2',
+    muted: '#96938d',
+    dim: '#66645f',
+    brand: '#f26a0d',
+    brandBright: '#ff7c1f',
+    brandDeep: '#b94a05',
+    brandWash: 'rgba(242, 106, 13, 0.10)',
+    brandGlow: 'rgba(242, 106, 13, 0.32)',
+    success: '#34b981',
+    warning: '#f0b429',
+    danger: '#e5484d',
+    info: '#5aa2ea',
+    overlay: 'linear-gradient(180deg, rgba(8,8,10,0.15) 0%, rgba(8,8,10,0.65) 55%, #08080a 100%)',
+  },
+  fonts: {
+    display: 'var(--font-display), "Helvetica Neue", Arial, sans-serif',
+    body: 'var(--font-body), system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+    mono: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+  },
+  radii: {
+    xs: '4px',
+    sm: '8px',
+    md: '14px',
+    lg: '22px',
+    xl: '32px',
+    pill: '999px',
+  },
+  shadows: {
+    card: '0 18px 50px rgba(0, 0, 0, 0.35)',
+    lift: '0 28px 80px rgba(0, 0, 0, 0.5)',
+    brand: '0 14px 40px rgba(242, 106, 13, 0.24)',
+  },
+  layout: {
+    container: '1240px',
+    narrow: '820px',
+    header: '86px',
+    gutter: 'clamp(20px, 4vw, 48px)',
+  },
+  transitions: {
+    fast: '160ms cubic-bezier(0.2, 0.7, 0.3, 1)',
+    base: '260ms cubic-bezier(0.2, 0.7, 0.3, 1)',
+    slow: '520ms cubic-bezier(0.16, 1, 0.3, 1)',
+  },
+};
+
+export const media = {
+  sm: '@media (min-width: 560px)',
+  md: '@media (min-width: 820px)',
+  lg: '@media (min-width: 1080px)',
+  xl: '@media (min-width: 1280px)',
+  hover: '@media (hover: hover) and (pointer: fine)',
+  reduce: '@media (prefers-reduced-motion: reduce)',
+};
