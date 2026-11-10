@@ -1,19 +1,24 @@
-import { Sora, Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import StyledComponentsRegistry from './registry';
 import Providers from './providers';
 import { SITE_URL } from '@/lib/site';
 
-const display = Sora({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const display = localFont({
+  src: './fonts/Sora-Variable.woff2',
+  weight: '400 700',
+  style: 'normal',
   variable: '--font-display',
   display: 'swap',
+  fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
 });
 
-const body = Inter({
-  subsets: ['latin'],
+const body = localFont({
+  src: './fonts/Inter-Variable.woff2',
+  weight: '400 700',
+  style: 'normal',
   variable: '--font-body',
   display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 });
 
 export const metadata = {
