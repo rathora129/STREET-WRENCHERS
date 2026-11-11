@@ -11,7 +11,7 @@ import { Eyebrow, Display, Intro } from '@/components/ui/type';
 
 const Hero = styled.section`
   position: relative;
-  min-height: 100svh;
+  min-height: calc(100svh - var(--sw-header-h));
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -20,7 +20,7 @@ const Hero = styled.section`
   touch-action: pan-y;
 
   ${media.lg} {
-    min-height: max(720px, 92svh);
+    min-height: max(600px, calc(84svh - var(--sw-header-h)));
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -67,7 +67,7 @@ const Inner = styled.div`
   width: 100%;
   max-width: ${({ theme }) => theme.layout.container};
   margin-inline: auto;
-  padding: calc(${({ theme }) => theme.layout.header} + 40px) ${({ theme }) => theme.layout.gutter} 44px;
+  padding: clamp(28px, 4vw, 48px) ${({ theme }) => theme.layout.gutter} clamp(28px, 4vw, 44px);
   position: relative;
   z-index: 1;
 `;
@@ -79,22 +79,22 @@ const Content = styled.div`
 
 const Title = styled(Display)`
   max-width: 16ch;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
   text-wrap: balance;
 `;
 
 const Sub = styled(Intro)`
   color: ${({ theme }) => theme.colors.smoke};
   max-width: 54ch;
-  font-size: clamp(15px, 1.7vw, 18px);
+  font-size: clamp(15px, 1.35vw, 17px);
 `;
 
 const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  margin-top: 32px;
+  gap: 12px;
+  margin-top: 26px;
 `;
 
 const Controls = styled.div`

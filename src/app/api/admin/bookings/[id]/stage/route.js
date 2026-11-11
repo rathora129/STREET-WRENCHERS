@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getSettings } from '@/lib/settings';
+import { syncCustomerStats, syncLeadForBooking } from '@/lib/crm';
 import { ApiError, ok, readJsonBody, requireOwner, route } from '@/lib/http';
 import { serialize } from '@/lib/admin/resources';
 import { bookingStageSchema } from '@/lib/validation/resources';
@@ -56,6 +57,8 @@ export const POST = route(async (request, { params }) => {
 
     return { event: stageEvent, updated: record };
   });
+
+  await Promise.all([syncCustomerStats(updated.customerId), syncLeadForBooking(updated.id)]);
 
   const settings = await getSettings();
   const template = settings.tracking?.[STAGE_TEMPLATE_FIELDS[data.stage]] || '';

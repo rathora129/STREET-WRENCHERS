@@ -15,13 +15,8 @@ export function middleware(request) {
     }
   }
 
-  if (pathname === '/login' && token) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    url.search = '';
-    return NextResponse.redirect(url);
-  }
-
+  // The login page validates the session server-side before redirecting, so an
+  // expired or forged cookie cannot bounce between /login and /dashboard.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-sw-path', pathname);
   requestHeaders.set('x-sw-search', search || '');

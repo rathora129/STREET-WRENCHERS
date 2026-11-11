@@ -1,7 +1,9 @@
 import crypto from 'node:crypto';
 import { prisma } from '@/lib/prisma';
 import { publicBookingSchema } from '@/lib/validation/resources';
-import { ApiError, clientIp, created, readJson, route } from '@/lib/http';
+import { rateLimit } from '@/lib/rate-limit';
+import { syncCustomerStats, syncLeadForBooking } from '@/lib/crm';
+import { ApiError, clientIp, created, readJson, route, tooManyRequests } from '@/lib/http';
 import { getSettings } from '@/lib/settings';
 import { BOOKING_TIMES } from '@/lib/site';
 import { createTrackingToken, trackingUrlFor } from '@/lib/tracking';
@@ -28,6 +30,9 @@ async function nextReference(date) {
 }
 
 export const POST = route(async (request) => {
+  const gate = rateLimit(`booking:${clientIp(request)}`, { limit: 10, windowMs: 15 * 60 * 1000 });
+  if (!gate.allowed) return tooManyRequests(gate.retryAfter);
+
   const payload = await readJson(request, publicBookingSchema);
   const settings = await getSettings();
   const bookingSettings = settings.booking;
@@ -203,6 +208,8 @@ export const POST = route(async (request) => {
 
     return record;
   });
+
+  await Promise.all([syncCustomerStats(booking.customerId), syncLeadForBooking(booking.id)]);
 
   console.info('[booking] created', { reference, ip: clientIp(request) });
 

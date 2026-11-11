@@ -13,7 +13,7 @@ const Wrap = styled.section`
   display: flex;
   align-items: flex-end;
   min-height: ${({ $compact }) => ($compact ? '380px' : 'clamp(440px, 62vh, 620px)')};
-  padding-top: calc(${({ theme }) => theme.layout.header} + 40px);
+  padding-top: clamp(28px, 4vw, 48px);
   padding-bottom: clamp(36px, 6vw, 72px);
   overflow: hidden;
   isolation: isolate;

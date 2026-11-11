@@ -4,11 +4,14 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowUpRight, Check, Star } from 'lucide-react';
+import { ArrowUpRight, BadgeCheck, Car, Check, Star } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassCard, glassFeature } from '@/styles/glass';
 import { CategoryIcon } from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
 import { SmartImage } from '@/components/ui/smart-image';
+import { localBrandLogo } from '@/data/brand-logos';
+import { brandShowcase } from '@/data/brand-showcase';
 import { formatPrice, formatDate } from '@/lib/utils';
 
 const CardLink = styled(Link)`
@@ -16,17 +19,22 @@ const CardLink = styled(Link)`
   flex-direction: column;
   gap: 18px;
   padding: 26px;
-  background: ${({ theme }) => theme.colors.charcoal};
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
   min-height: 100%;
-  transition: border-color 260ms ease, transform 260ms ease, background 260ms ease;
+  transition: border-color 260ms ease, transform 260ms ease, background 260ms ease, box-shadow 260ms ease;
   position: relative;
 
   ${media.hover} {
     &:hover {
-      border-color: rgba(242, 106, 13, 0.4);
-      background: #16161b;
+      border-color: rgba(242, 106, 13, 0.42);
+      background:
+        radial-gradient(130% 120% at 88% -25%, rgba(242, 106, 13, 0.13), transparent 58%),
+        linear-gradient(155deg, rgba(31, 31, 38, 0.76), rgba(14, 14, 18, 0.64));
+      box-shadow:
+        0 24px 56px rgba(0, 0, 0, 0.4),
+        0 0 42px rgba(242, 106, 13, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
       transform: translateY(-4px);
 
       .arrow {
@@ -141,9 +149,8 @@ const PackageCardWrap = styled.div`
   flex-direction: column;
   gap: 20px;
   padding: clamp(24px, 3vw, 34px);
-  border: 1px solid ${({ $featured, theme }) => ($featured ? 'rgba(242,106,13,0.45)' : theme.colors.line)};
+  ${({ $featured }) => ($featured ? glassFeature : glassCard)}
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ $featured }) => ($featured ? 'linear-gradient(160deg, rgba(242,106,13,0.09), #111114 55%)' : '#111114')};
   position: relative;
 `;
 
@@ -252,13 +259,19 @@ const AmcCardWrap = styled(Link)`
   flex-direction: column;
   gap: 16px;
   padding: clamp(22px, 3vw, 30px);
-  border: 1px solid ${({ $featured }) => ($featured ? 'rgba(242,106,13,0.5)' : 'rgba(255,255,255,0.08)')};
-  background: ${({ $featured }) => ($featured ? 'linear-gradient(165deg, rgba(242,106,13,0.12), #101014 60%)' : '#101014')};
+  ${({ $featured }) => ($featured ? glassFeature : glassCard)}
   border-radius: ${({ theme }) => theme.radii.md};
-  transition: transform 260ms ease, border-color 260ms ease;
+  transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
 
   ${media.hover} {
-    &:hover { transform: translateY(-4px); border-color: rgba(242, 106, 13, 0.55); }
+    &:hover {
+      transform: translateY(-4px);
+      border-color: rgba(242, 106, 13, 0.55);
+      box-shadow:
+        0 24px 56px rgba(0, 0, 0, 0.4),
+        0 0 42px rgba(242, 106, 13, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    }
   }
 `;
 
@@ -350,28 +363,36 @@ export function AmcCard({ plan, featured = false }) {
 }
 
 const BrandCard = styled(Link)`
+  position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  height: 100%;
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.charcoal};
-  transition: transform 260ms ease, border-color 260ms ease, background 260ms ease;
+  isolation: isolate;
+  transition: transform 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
 
   ${media.hover} {
     &:hover {
       transform: translateY(-4px);
-      border-color: rgba(242, 106, 13, 0.45);
-      background: #16161b;
+      border-color: rgba(242, 106, 13, 0.55);
+      box-shadow:
+        0 24px 48px rgba(0, 0, 0, 0.45),
+        0 0 40px rgba(242, 106, 13, 0.08);
 
       .brand-cover {
-        transform: scale(1.045);
+        transform: scale(1.055);
+      }
+
+      .brand-sheen {
+        opacity: 1;
       }
 
       .brand-arrow {
         background: ${({ theme }) => theme.colors.brand};
+        border-color: ${({ theme }) => theme.colors.brand};
         color: #0b0b0d;
-        border-color: transparent;
       }
     }
   }
@@ -389,111 +410,193 @@ const BrandMedia = styled.div`
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 72% 18%, rgba(242, 106, 13, 0.2), transparent 58%),
+    radial-gradient(circle at 72% 18%, rgba(242, 106, 13, 0.16), transparent 58%),
     linear-gradient(140deg, #17171c 0%, #0b0b0d 100%);
 
   .brand-cover {
     object-fit: cover;
-    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 `;
 
+const BrandShade = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 8, 10, 0.3) 0%,
+    rgba(8, 8, 10, 0) 30%,
+    rgba(8, 8, 10, 0.04) 72%,
+    rgba(8, 8, 10, 0.42) 100%
+  );
+  pointer-events: none;
+`;
+
+const BrandSheen = styled.div`
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 44%);
+  transition: opacity 320ms ease;
+  pointer-events: none;
+`;
+
 const LogoPlate = styled.div`
-  width: min(56%, 150px);
-  aspect-ratio: 3 / 2;
-  border-radius: 10px;
-  background: #f4f1ea;
+  width: min(58%, 168px);
+  height: 84px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242, 106, 13, 0.12), transparent 70%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.015));
   display: grid;
   place-items: center;
-  padding: 16px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  padding: 14px 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.32);
 
   img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    filter: ${({ $local }) => ($local ? 'brightness(0) invert(1)' : 'none')};
   }
 `;
 
-const Monogram = styled.span`
-  font-family: ${({ theme }) => theme.fonts.display};
-  font-size: clamp(30px, 4vw, 42px);
-  font-weight: 600;
-  letter-spacing: 0.06em;
+const LogoFallback = styled.div`
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: ${({ theme }) => theme.colors.brand};
+  background: rgba(242, 106, 13, 0.12);
+  border: 1px solid rgba(242, 106, 13, 0.26);
+`;
+
+const BrandLogo = styled.span`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  padding: 7px;
+  background: rgba(8, 8, 10, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   color: ${({ theme }) => theme.colors.white};
-  text-transform: uppercase;
-`;
+  pointer-events: none;
 
-const BrandBody = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 16px 18px;
-
-  strong {
-    display: block;
-    font-family: ${({ theme }) => theme.fonts.display};
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: ${({ theme }) => theme.colors.white};
-  }
-
-  span {
-    display: block;
-    margin-top: 3px;
-    font-size: 11px;
-    color: ${({ theme }) => theme.colors.muted};
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: ${({ $local }) => ($local ? 'brightness(0) invert(1)' : 'none')};
   }
 `;
 
 const BrandArrow = styled.span`
-  width: 34px;
-  height: 34px;
-  flex: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1px solid ${({ theme }) => theme.colors.lineStrong};
   display: grid;
   place-items: center;
-  color: ${({ theme }) => theme.colors.smoke};
+  color: ${({ theme }) => theme.colors.white};
+  background: rgba(8, 8, 10, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   transition: background 220ms ease, color 220ms ease, border-color 220ms ease;
+  pointer-events: none;
 `;
 
-function brandInitials(name = '') {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('');
-}
+const BrandFoot = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  strong {
+    display: block;
+    font-family: ${({ theme }) => theme.fonts.display};
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: ${({ theme }) => theme.colors.white};
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    font-size: 11px;
+    color: ${({ theme }) => theme.colors.muted};
+  }
+
+  span::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.brand};
+  }
+`;
 
 function BrandVisual({ brand }) {
   const [imageFailed, setImageFailed] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
-  const showImage = brand.image && !imageFailed;
-  const showLogo = brand.logo && !logoFailed;
+  const [failedLogo, setFailedLogo] = useState(null);
+  const showcase = brandShowcase(brand.slug);
+  const localLogo = localBrandLogo(brand.slug);
+  const logoSrc = [brand.logo, localLogo].filter(Boolean).find((src) => src !== failedLogo);
+  const photo = !imageFailed ? brand.image || showcase?.src : null;
+  const photoAlt = brand.image ? `${brand.name} vehicle serviced at Street Wrenchers` : showcase?.alt;
+  const modelCount = brand._count?.models ?? brand.models?.length ?? 0;
 
   return (
-    <BrandMedia>
-      {showImage ? (
-        <Image
-          src={brand.image}
-          alt={`${brand.name} vehicles serviced at Street Wrenchers`}
-          fill
-          sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
-          className="brand-cover"
-          onError={() => setImageFailed(true)}
-        />
-      ) : showLogo ? (
-        <LogoPlate>
-          <img src={brand.logo} alt={`${brand.name} logo`} onError={() => setLogoFailed(true)} loading="lazy" />
-        </LogoPlate>
-      ) : (
-        <Monogram aria-hidden="true">{brandInitials(brand.name)}</Monogram>
-      )}
-    </BrandMedia>
+    <>
+      <BrandMedia>
+        {photo ? (
+          <Image
+            src={photo}
+            alt={photoAlt || `${brand.name} vehicle`}
+            fill
+            sizes="(max-width: 560px) 78vw, (max-width: 1080px) 42vw, 300px"
+            className="brand-cover"
+            onError={() => setImageFailed(true)}
+          />
+        ) : logoSrc ? (
+          <LogoPlate $local={logoSrc !== brand.logo}>
+            <img src={logoSrc} alt={`${brand.name} logo`} onError={() => setFailedLogo(logoSrc)} loading="lazy" />
+          </LogoPlate>
+        ) : (
+          <LogoFallback>
+            <Car size={30} strokeWidth={1.6} aria-hidden="true" />
+          </LogoFallback>
+        )}
+        <BrandShade aria-hidden="true" />
+        <BrandSheen className="brand-sheen" aria-hidden="true" />
+      </BrandMedia>
+      {photo && logoSrc ? (
+        <BrandLogo $local={logoSrc !== brand.logo} aria-hidden="true">
+          <img src={logoSrc} alt="" onError={() => setFailedLogo(logoSrc)} />
+        </BrandLogo>
+      ) : null}
+      <BrandArrow className="brand-arrow" aria-hidden="true">
+        <ArrowUpRight size={15} strokeWidth={2} />
+      </BrandArrow>
+      <BrandFoot>
+        <strong>{brand.name}</strong>
+        <span>
+          {modelCount} {modelCount === 1 ? 'model' : 'models'} covered
+        </span>
+      </BrandFoot>
+    </>
   );
 }
 
@@ -502,15 +605,6 @@ export function BrandTile({ brand }) {
   return (
     <BrandCard href={`/brands/${brand.slug}`} aria-label={`${brand.name} — ${modelCount} models covered`}>
       <BrandVisual brand={brand} />
-      <BrandBody>
-        <div>
-          <strong>{brand.name}</strong>
-          <span>{modelCount} {modelCount === 1 ? 'model' : 'models'} covered</span>
-        </div>
-        <BrandArrow className="brand-arrow">
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </BrandArrow>
-      </BrandBody>
     </BrandCard>
   );
 }
@@ -518,15 +612,17 @@ export function BrandTile({ brand }) {
 const BlogCardWrap = styled(Link)`
   display: flex;
   flex-direction: column;
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.charcoal};
-  transition: transform 260ms ease, border-color 260ms ease;
+  transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
 
   &:hover {
     transform: translateY(-4px);
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(242, 106, 13, 0.42);
+    box-shadow:
+      0 24px 52px rgba(0, 0, 0, 0.4),
+      0 0 38px rgba(242, 106, 13, 0.07);
   }
 `;
 
@@ -574,9 +670,8 @@ export function BlogCard({ post }) {
 const TestimonialWrap = styled.figure`
   margin: 0;
   padding: clamp(22px, 3vw, 30px);
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.charcoal};
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -600,7 +695,8 @@ const Quote = styled.blockquote`
 const Person = styled.figcaption`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 
   strong {
     font-size: 13px;
@@ -612,6 +708,29 @@ const Person = styled.figcaption`
     font-size: 11.5px;
     color: ${({ theme }) => theme.colors.dim};
   }
+`;
+
+const NameRow = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const VerifiedBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 106, 13, 0.34);
+  background: rgba(242, 106, 13, 0.1);
+  color: ${({ theme }) => theme.colors.brand};
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
 `;
 
 const PersonRow = styled.div`
@@ -636,7 +755,8 @@ const Avatar = styled.span`
 
 export function TestimonialCard({ testimonial }) {
   const reviewDate = testimonial.reviewedAt || testimonial.createdAt;
-  const meta = [testimonial.vehicle, reviewDate ? formatDate(reviewDate) : null].filter(Boolean).join(' · ');
+  const source = testimonial.source?.trim();
+  const meta = [testimonial.vehicle, source, reviewDate ? formatDate(reviewDate) : null].filter(Boolean).join(' · ');
 
   return (
     <TestimonialWrap>
@@ -653,7 +773,14 @@ export function TestimonialCard({ testimonial }) {
           </Avatar>
         ) : null}
         <Person>
-          <strong>{testimonial.name}</strong>
+          <NameRow>
+            <strong>{testimonial.name}</strong>
+            {source ? (
+              <VerifiedBadge title={`Review source: ${source}`}>
+                <BadgeCheck size={11} aria-hidden="true" /> Verified
+              </VerifiedBadge>
+            ) : null}
+          </NameRow>
           {meta ? <span>{meta}</span> : null}
         </Person>
       </PersonRow>

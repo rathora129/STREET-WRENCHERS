@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X, Expand } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassCard, glassOverlay } from '@/styles/glass';
 import { SmartImage } from '@/components/ui/smart-image';
 import { Carousel } from '@/components/ui/carousel';
 
@@ -23,14 +24,18 @@ const Tile = styled.button`
   position: relative;
   display: block;
   width: 100%;
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.charcoal};
   cursor: zoom-in;
   text-align: left;
+  transition: border-color 220ms ease, box-shadow 220ms ease;
 
   ${media.hover} {
+    &:hover {
+      border-color: rgba(242, 106, 13, 0.38);
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.42), 0 0 34px rgba(242, 106, 13, 0.07);
+    }
     &:hover img { transform: scale(1.045); }
     &:hover .zoom { opacity: 1; transform: translateY(0); }
   }
@@ -47,13 +52,19 @@ const Zoom = styled.span`
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgba(8, 8, 10, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 10, 13, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: #fff;
   opacity: 0;
   transform: translateY(6px);
   transition: opacity 220ms ease, transform 220ms ease;
   pointer-events: none;
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    background: rgba(10, 10, 13, 0.9);
+  }
 `;
 
 const Overlay = styled(motion.div)`
@@ -63,8 +74,7 @@ const Overlay = styled(motion.div)`
   display: grid;
   place-items: center;
   padding: clamp(16px, 4vw, 48px);
-  background: rgba(5, 5, 7, 0.94);
-  backdrop-filter: blur(6px);
+  ${glassOverlay}
 `;
 
 const Stage = styled(motion.div)`
@@ -92,9 +102,19 @@ const Caption = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: ${({ theme }) => theme.radii.sm};
+  background: rgba(12, 12, 16, 0.5);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  backdrop-filter: blur(12px) saturate(130%);
   color: ${({ theme }) => theme.colors.muted};
   font-size: 12.5px;
   line-height: 1.5;
+
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    background: rgba(12, 12, 16, 0.94);
+  }
 `;
 
 const Control = styled.button`
@@ -104,11 +124,18 @@ const Control = styled.button`
   place-items: center;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(18, 18, 22, 0.86);
+  background: rgba(18, 18, 22, 0.55);
   color: #f6f5f2;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  transition: border-color 160ms ease, background 160ms ease;
 
-  &:hover { border-color: #f26a0d; }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    background: rgba(18, 18, 22, 0.94);
+  }
+
+  &:hover { border-color: #f26a0d; background: rgba(242, 106, 13, 0.16); }
 `;
 
 const TopBar = styled.div`

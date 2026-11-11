@@ -2,6 +2,7 @@
 
 import styled from 'styled-components';
 import { Search } from 'lucide-react';
+import { glassCard } from '@/styles/glass';
 
 const Wrap = styled.div`
   display: flex;
@@ -9,9 +10,10 @@ const Wrap = styled.div`
   align-items: flex-start;
   gap: 12px;
   padding: clamp(28px, 4vw, 44px);
-  border: 1px dashed ${({ theme }) => theme.colors.lineStrong};
+  ${glassCard}
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.22);
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.coal};
 `;
 
 const IconWrap = styled.div`

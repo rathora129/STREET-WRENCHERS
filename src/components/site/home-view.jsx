@@ -13,7 +13,7 @@ import { Reveal } from '@/components/ui/reveal';
 import { Accordion } from '@/components/ui/accordion';
 import { SmartImage } from '@/components/ui/smart-image';
 import { HeroSlider } from '@/components/site/hero-slider';
-import { TestimonialMarquee } from '@/components/site/testimonial-marquee';
+import { TestimonialMarquee, TestimonialsEmpty } from '@/components/site/testimonial-marquee';
 import { ServiceCard, PackageCard, AmcCard, BrandTile, BlogCard } from '@/components/site/cards';
 import { GalleryGrid } from '@/components/site/gallery-grid';
 import { Carousel } from '@/components/ui/carousel';
@@ -382,8 +382,8 @@ export function HomeView({ data }) {
           <Carousel
             label="Car brands"
             items={brands}
-            itemWidth="clamp(196px, 27vw, 286px)"
-            gap="10px"
+            itemWidth="clamp(232px, 24vw, 272px)"
+            gap="14px"
             renderItem={(brand) => <BrandTile brand={brand} />}
           />
         </Container>
@@ -455,16 +455,12 @@ export function HomeView({ data }) {
           <SectionHead
             eyebrow={testimonialsSection.eyebrow || 'Reviews'}
             title={testimonialsSection.heading || 'What drivers say.'}
-            intro={testimonialsSection.subheading}
+            intro={testimonials.length ? testimonialsSection.subheading : null}
           />
           {testimonials.length ? (
             <TestimonialMarquee items={testimonials} />
           ) : (
-            <EmptyState
-              title="Verified reviews only"
-              text="We publish customer feedback after it has been confirmed. Approved reviews will appear here and on the reviews page."
-              action={<Button href="/reviews" variant="outline" size="sm">Visit reviews page</Button>}
-            />
+            <TestimonialsEmpty />
           )}
         </Container>
       </Section>

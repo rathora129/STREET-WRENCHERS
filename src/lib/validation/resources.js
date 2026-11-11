@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { parseTags } from '@/lib/utils';
+import { parseTags } from '../utils.js';
 
 const requiredString = (max = 500, min = 1) => z.string().trim().min(min).max(max);
 const optionalString = (max = 2000) =>

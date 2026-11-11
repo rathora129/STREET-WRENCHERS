@@ -1,7 +1,8 @@
 'use client';
 
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { media } from '@/styles/theme';
+import { glassField, glassPanel } from '@/styles/glass';
 
 export const FormGrid = styled.div`
   display: grid;
@@ -34,17 +35,16 @@ export const LabelText = styled.span`
   }
 `;
 
-const control = `
+const control = css`
   width: 100%;
   min-height: 50px;
   padding: 13px 15px;
-  background: #0c0c0f;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  ${glassField}
   border-radius: 6px;
   color: #f6f5f2;
   font-size: 14px;
   line-height: 1.5;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
   appearance: none;
 
   &::placeholder { color: #8a867f; }
@@ -52,7 +52,8 @@ const control = `
   &:focus {
     outline: none;
     border-color: #f26a0d;
-    background: #0f0f13;
+    background: rgba(15, 15, 19, 0.82);
+    box-shadow: 0 0 0 3px rgba(242, 106, 13, 0.12);
   }
 
   &:focus-visible {
@@ -133,9 +134,8 @@ export const FormSection = styled.div`
   flex-direction: column;
   gap: 18px;
   padding: clamp(20px, 3vw, 32px);
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassPanel}
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.charcoal};
 `;
 
 export const FormTitle = styled.h3`

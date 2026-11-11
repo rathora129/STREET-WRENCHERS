@@ -56,16 +56,23 @@ const NavButton = styled.button`
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 1px solid ${({ theme }) => theme.colors.lineStrong};
-  background: ${({ theme }) => theme.colors.charcoal};
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(20, 20, 24, 0.5);
   color: ${({ theme }) => theme.colors.white};
   cursor: pointer;
-  transition: background 180ms ease, border-color 180ms ease;
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  backdrop-filter: blur(12px) saturate(130%);
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    background: rgba(19, 19, 23, 0.94);
+  }
 
   &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.brand};
     border-color: ${({ theme }) => theme.colors.brand};
     color: #ffffff;
+    box-shadow: 0 0 26px rgba(242, 106, 13, 0.25);
   }
 
   &:focus-visible { outline: 2px solid ${({ theme }) => theme.colors.brand}; outline-offset: 2px; }

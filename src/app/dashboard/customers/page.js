@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { ResourceManager } from '@/components/dashboard/resource-manager';
 import { MainCell } from '@/components/dashboard/cells';
+import { RowLink } from '@/components/dashboard/ui';
 
 export default function CustomersPage() {
   return (
@@ -23,6 +25,11 @@ export default function CustomersPage() {
         { key: 'totalSpent', label: 'Total spent', type: 'price', align: 'right' },
         { key: 'lastVisitAt', label: 'Last visit', type: 'date' },
       ]}
+      rowActions={(row) => (
+        <RowLink as={Link} href={`/dashboard/customers/${row.id}`}>
+          History
+        </RowLink>
+      )}
       fields={[
         { name: 'name', label: 'Full name', required: true },
         { name: 'phone', label: 'Phone', required: true, placeholder: '+971 5X XXX XXXX', help: 'Stored as the unique customer identifier.' },

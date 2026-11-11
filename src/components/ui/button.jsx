@@ -9,15 +9,16 @@ const base = css`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: ${({ $size }) => ($size === 'lg' ? '58px' : $size === 'sm' ? '42px' : '52px')};
-  padding-inline: ${({ $size }) => ($size === 'lg' ? '30px' : $size === 'sm' ? '18px' : '24px')};
+  gap: 8px;
+  height: ${({ $size }) => ($size === 'lg' ? '54px' : $size === 'sm' ? '40px' : '48px')};
+  padding-inline: ${({ $size }) => ($size === 'lg' ? '26px' : $size === 'sm' ? '16px' : '22px')};
   border-radius: ${({ theme }) => theme.radii.xs};
   border: 1px solid transparent;
   font-family: ${({ theme }) => theme.fonts.body};
   font-size: ${({ $size }) => ($size === 'sm' ? '11px' : '12px')};
   font-weight: 600;
-  letter-spacing: 0.14em;
+  line-height: 1;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   white-space: nowrap;
   transition: background ${({ theme }) => theme.transitions.fast}, color ${({ theme }) => theme.transitions.fast},
@@ -25,14 +26,29 @@ const base = css`
   cursor: pointer;
 
   svg {
-    transition: transform ${({ theme }) => theme.transitions.fast};
     flex: none;
+    transition: transform ${({ theme }) => theme.transitions.fast};
+  }
+
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-arrow {
+    margin-left: 1px;
   }
 
   ${media.hover} {
-    &:hover svg {
-      transform: translate(3px, -3px);
+    &:hover .btn-arrow {
+      transform: translate(2px, -2px);
     }
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brandBright};
+    outline-offset: 3px;
   }
 
   &:disabled {
@@ -47,23 +63,32 @@ const variants = {
     background: ${({ theme }) => theme.colors.brand};
     color: #ffffff;
     border-color: ${({ theme }) => theme.colors.brand};
+    box-shadow: 0 10px 26px rgba(242, 106, 13, 0.18);
 
     ${media.hover} {
       &:hover {
         background: ${({ theme }) => theme.colors.brandBright};
         border-color: ${({ theme }) => theme.colors.brandBright};
+        box-shadow: 0 14px 34px rgba(242, 106, 13, 0.28);
       }
     }
   `,
   outline: css`
-    background: transparent;
+    background: rgba(20, 20, 24, 0.46);
     color: ${({ theme }) => theme.colors.white};
-    border-color: ${({ theme }) => theme.colors.lineStrong};
+    border-color: rgba(255, 255, 255, 0.18);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    backdrop-filter: blur(10px) saturate(130%);
+
+    @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+      background: rgba(18, 18, 22, 0.92);
+    }
 
     ${media.hover} {
       &:hover {
-        border-color: ${({ theme }) => theme.colors.white};
-        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(242, 106, 13, 0.5);
+        background: rgba(242, 106, 13, 0.09);
+        box-shadow: 0 0 30px rgba(242, 106, 13, 0.08);
       }
     }
   `,
@@ -117,14 +142,16 @@ export function Button({
   variant = 'primary',
   size = 'md',
   icon = true,
+  leftIcon,
   external = false,
   children,
   ...rest
 }) {
   const content = (
     <>
+      {leftIcon ? <span className="btn-icon">{leftIcon}</span> : null}
       <span>{children}</span>
-      {icon ? <ArrowUpRight size={16} strokeWidth={2} aria-hidden="true" /> : null}
+      {icon ? <ArrowUpRight className="btn-arrow" size={15} strokeWidth={2} aria-hidden="true" /> : null}
     </>
   );
 

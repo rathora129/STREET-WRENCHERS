@@ -2,11 +2,10 @@ import { notFound } from 'next/navigation';
 import { getPublishedPage, getPublishedTestimonials } from '@/services/content';
 import { pageMetadata, breadcrumbSchema, JsonLd } from '@/lib/seo';
 import { Section, Container, Grid } from '@/components/ui/layout';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Button } from '@/components/ui/button';
 import { Reveal } from '@/components/ui/reveal';
 import { PageHero } from '@/components/site/page-hero';
 import { TestimonialCard } from '@/components/site/cards';
+import { TestimonialsEmpty } from '@/components/site/testimonial-marquee';
 import { CtaBand } from '@/components/site/cta-band';
 
 export async function generateMetadata() {
@@ -41,11 +40,7 @@ export default async function ReviewsPage() {
               ))}
             </Grid>
           ) : (
-            <EmptyState
-              title="Verified reviews only"
-              text="We publish customer feedback after it has been confirmed. Approved reviews will appear here. If you have recently visited the workshop, the team would be glad to hear about your experience."
-              action={<Button href="/contact" variant="outline" size="sm">Share feedback</Button>}
-            />
+            <TestimonialsEmpty onReviewsPage />
           )}
         </Container>
       </Section>

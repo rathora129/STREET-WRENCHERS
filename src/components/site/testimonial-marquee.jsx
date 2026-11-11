@@ -2,8 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import Image from 'next/image';
 import { useReducedMotion } from 'framer-motion';
+import { BadgeCheck } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassCard } from '@/styles/glass';
+import { Button } from '@/components/ui/button';
 import { TestimonialCard } from './cards';
 
 const Viewport = styled.div`
@@ -66,6 +70,125 @@ const ScrollRow = styled.div`
     width: clamp(272px, 62vw, 380px);
   }
 `;
+
+const EmptyShell = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  ${glassCard}
+  border-radius: ${({ theme }) => theme.radii.md};
+
+  ${media.md} {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  }
+`;
+
+const EmptyMedia = styled.div`
+  position: relative;
+  min-height: 172px;
+  background: #101014;
+
+  img { object-fit: cover; }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(11, 11, 13, 0.05) 0%, rgba(11, 11, 13, 0.62) 100%),
+      linear-gradient(90deg, transparent 55%, rgba(19, 19, 23, 0.85) 100%);
+    pointer-events: none;
+  }
+
+  ${media.md} {
+    min-height: 100%;
+  }
+`;
+
+const EmptyBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 13px;
+  padding: clamp(22px, 3.2vw, 36px);
+`;
+
+const EmptyTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 6px 11px;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  border: 1px solid rgba(242, 106, 13, 0.3);
+  background: rgba(242, 106, 13, 0.08);
+  color: ${({ theme }) => theme.colors.brand};
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+`;
+
+const EmptyTitle = styled.p`
+  max-width: 30ch;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 600;
+  line-height: 1.27;
+  letter-spacing: -0.01em;
+  color: ${({ theme }) => theme.colors.white};
+`;
+
+const EmptyText = styled.p`
+  max-width: 46ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: ${({ theme }) => theme.colors.smoke};
+`;
+
+const EmptyActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+`;
+
+export function TestimonialsEmpty({ onReviewsPage = false }) {
+  return (
+    <EmptyShell data-testimonials-empty>
+      <EmptyMedia>
+        <Image
+          src="/assets/images/hero/workshop.jpg"
+          alt="Technician working on a car in the Street Wrenchers workshop"
+          fill
+          sizes="(min-width: 768px) 34vw, 100vw"
+        />
+      </EmptyMedia>
+      <EmptyBody>
+        <EmptyTag>
+          <BadgeCheck size={12} aria-hidden="true" /> Verified reviews only
+        </EmptyTag>
+        <EmptyTitle>Customer stories will appear here as verified reviews are approved.</EmptyTitle>
+        <EmptyText>
+          Every review is confirmed with the customer before it is published, so the feedback you read here is genuine.
+        </EmptyText>
+        <EmptyActions>
+          {onReviewsPage ? (
+            <>
+              <Button href="/book" size="sm">Book a service</Button>
+              <Button href="/contact" variant="outline" size="sm">Contact the workshop</Button>
+            </>
+          ) : (
+            <>
+              <Button href="/reviews" size="sm">Visit reviews page</Button>
+              <Button href="/contact" variant="outline" size="sm">Share your experience</Button>
+            </>
+          )}
+        </EmptyActions>
+      </EmptyBody>
+    </EmptyShell>
+  );
+}
 
 export function TestimonialMarquee({ items = [], speed = 26 }) {
   const reduce = useReducedMotion();

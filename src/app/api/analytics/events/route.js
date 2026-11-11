@@ -1,11 +1,15 @@
 import { prisma } from '@/lib/prisma';
 import { analyticsEventSchema } from '@/lib/validation/resources';
-import { created, readJson, route } from '@/lib/http';
+import { rateLimit } from '@/lib/rate-limit';
+import { clientIp, created, readJson, route, tooManyRequests } from '@/lib/http';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export const POST = route(async (request) => {
+  const gate = rateLimit(`analytics:${clientIp(request)}`, { limit: 200, windowMs: 5 * 60 * 1000 });
+  if (!gate.allowed) return tooManyRequests(gate.retryAfter);
+
   const payload = await readJson(request, analyticsEventSchema);
 
   const event = await prisma.analyticsEvent.create({

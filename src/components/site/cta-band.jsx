@@ -1,6 +1,7 @@
 'use client';
 
 import styled from 'styled-components';
+import { glassFeature } from '@/styles/glass';
 import { Container } from '@/components/ui/layout';
 import { Heading, Intro } from '@/components/ui/type';
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,8 @@ const Panel = styled(Container)`
   display: grid;
   gap: 26px;
   padding: clamp(28px, 4vw, 52px);
-  border: 1px solid rgba(242, 106, 13, 0.32);
+  ${glassFeature}
   border-radius: ${({ theme }) => theme.radii.lg};
-  background:
-    radial-gradient(circle at 88% 12%, rgba(242, 106, 13, 0.18), transparent 45%),
-    linear-gradient(120deg, #15100b 0%, #0d0d10 62%);
   overflow: hidden;
 
   @media (min-width: 820px) {

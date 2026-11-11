@@ -6,10 +6,24 @@ import { media } from './theme';
 export const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; }
 
+  :root {
+    --sw-header-h: ${({ theme }) => theme.layout.header};
+  }
+
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--sw-header-h) + 28px);
     -webkit-text-size-adjust: 100%;
     ${media.reduce} { scroll-behavior: auto; }
+  }
+
+  ${media.reduce} {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   body {

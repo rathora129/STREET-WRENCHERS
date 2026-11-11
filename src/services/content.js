@@ -235,7 +235,6 @@ export async function getHomeData() {
     prisma.brand.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
-      take: 12,
       include: { _count: { select: { models: true } } },
     }),
     getGalleryMedia(),

@@ -3,6 +3,7 @@
 import styled from 'styled-components';
 import { Check, Gauge, Fuel, Cog, Users, Calendar, Palette, Car } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassCard } from '@/styles/glass';
 import { Section, Container, Grid, Panel } from '@/components/ui/layout';
 import { Eyebrow, Heading, Intro, Prose } from '@/components/ui/type';
 import { Badge } from '@/components/ui/badge';
@@ -66,13 +67,12 @@ const Specs = styled.dl`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  background: ${({ theme }) => theme.colors.line};
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
   overflow: hidden;
 
   div {
-    background: ${({ theme }) => theme.colors.coal};
+    background: rgba(14, 14, 18, 0.34);
     padding: 14px 16px;
     display: flex;
     flex-direction: column;

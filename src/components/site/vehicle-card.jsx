@@ -3,21 +3,22 @@
 import Link from 'next/link';
 import styled from 'styled-components';
 import { ArrowUpRight, Gauge, Users, Fuel, Cog } from 'lucide-react';
+import { glassCard } from '@/styles/glass';
 import { SmartImage } from '@/components/ui/smart-image';
 import { Badge } from '@/components/ui/badge';
 
 const Card = styled(Link)`
   display: flex;
   flex-direction: column;
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
   overflow: hidden;
-  background: ${({ theme }) => theme.colors.charcoal};
-  transition: transform 260ms ease, border-color 260ms ease;
+  transition: transform 260ms ease, border-color 260ms ease, box-shadow 260ms ease;
 
   &:hover {
     transform: translateY(-4px);
     border-color: rgba(242, 106, 13, 0.45);
+    box-shadow: 0 24px 52px rgba(0, 0, 0, 0.4), 0 0 34px rgba(242, 106, 13, 0.08);
   }
 `;
 

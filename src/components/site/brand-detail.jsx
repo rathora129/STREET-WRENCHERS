@@ -1,8 +1,10 @@
 'use client';
 
 import styled from 'styled-components';
+import { useState } from 'react';
 import { ArrowUpRight, Car, Fuel, ShieldCheck } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassCard } from '@/styles/glass';
 import { Section, Container, Grid, Panel } from '@/components/ui/layout';
 import { Eyebrow, Heading, Intro, SectionHead } from '@/components/ui/type';
 import { Badge } from '@/components/ui/badge';
@@ -11,15 +13,16 @@ import { Reveal } from '@/components/ui/reveal';
 import { PageHero } from '@/components/site/page-hero';
 import { CtaBand } from '@/components/site/cta-band';
 import { AmcCard } from '@/components/site/cards';
+import { localBrandLogo } from '@/data/brand-logos';
+import { brandShowcase } from '@/data/brand-showcase';
 
 const ModelCard = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 20px;
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.charcoal};
   min-height: 100%;
 
   strong {
@@ -70,26 +73,34 @@ const BrandPanel = styled(Panel)`
 
 const LogoPlate = styled.div`
   width: 100%;
-  min-height: 108px;
+  min-height: 118px;
   border-radius: ${({ theme }) => theme.radii.sm};
-  background: #f4f1ea;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242, 106, 13, 0.12), transparent 70%),
+    linear-gradient(150deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.015));
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: 22px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   img {
-    max-width: 70%;
-    max-height: 72px;
+    max-width: 72%;
+    max-height: 74px;
     object-fit: contain;
+    filter: ${({ $local }) => ($local ? 'brightness(0) invert(1)' : 'none')};
   }
 `;
 
-const Initials = styled.span`
-  font-family: ${({ theme }) => theme.fonts.display};
-  font-size: 40px;
-  letter-spacing: 0.08em;
-  color: #17171c;
-  text-transform: uppercase;
+const LogoMark = styled.div`
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: ${({ theme }) => theme.colors.brand};
+  background: rgba(242, 106, 13, 0.12);
+  border: 1px solid rgba(242, 106, 13, 0.26);
 `;
 
 const Facts = styled.ul`
@@ -115,15 +126,6 @@ const Note = styled.p`
   color: ${({ theme }) => theme.colors.muted};
 `;
 
-function initials(name = '') {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('');
-}
-
 function yearRange(model) {
   if (model.yearFrom && model.yearTo) return `${model.yearFrom}–${model.yearTo}`;
   if (model.yearFrom) return `${model.yearFrom} onwards`;
@@ -135,6 +137,8 @@ export function BrandDetail({ brand }) {
   const models = brand.models || [];
   const plans = brand.amcPlans || [];
   const bookHref = `/book?brand=${encodeURIComponent(brand.name)}`;
+  const [failedLogo, setFailedLogo] = useState(null);
+  const logoSrc = [brand.logo, localBrandLogo(brand.slug)].filter(Boolean).find((src) => src !== failedLogo);
 
   return (
     <>
@@ -142,7 +146,7 @@ export function BrandDetail({ brand }) {
         eyebrow={brand.country ? `Brand coverage · ${brand.country}` : 'Brand coverage'}
         heading={`${brand.name} service in Dubai.`}
         subheading={`Scheduled maintenance, diagnostics and repair for ${brand.name} vehicles. Select your model and the team will confirm the exact scope before work starts.`}
-        image={brand.image || '/assets/images/hero/workshop.jpg'}
+        image={brand.image || brandShowcase(brand.slug)?.src || '/assets/images/hero/workshop.jpg'}
         imageAlt={`${brand.name} servicing`}
         breadcrumbs={[
           { label: 'Home', href: '/' },
@@ -197,13 +201,20 @@ export function BrandDetail({ brand }) {
             </div>
 
             <BrandPanel $pad="clamp(20px, 2.6vw, 28px)">
-              {brand.logo ? (
-                <LogoPlate>
-                  <img src={brand.logo} alt={`${brand.name} logo`} loading="lazy" />
+              {logoSrc ? (
+                <LogoPlate $local={logoSrc !== brand.logo}>
+                  <img
+                    src={logoSrc}
+                    alt={`${brand.name} logo`}
+                    loading="lazy"
+                    onError={() => setFailedLogo(logoSrc)}
+                  />
                 </LogoPlate>
               ) : (
                 <LogoPlate>
-                  <Initials aria-hidden="true">{initials(brand.name)}</Initials>
+                  <LogoMark>
+                    <Car size={30} strokeWidth={1.6} aria-hidden="true" />
+                  </LogoMark>
                 </LogoPlate>
               )}
               <div>

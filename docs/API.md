@@ -14,7 +14,7 @@ Errors use:
 { "ok": false, "error": "Message", "details": [{ "field": "email", "message": "Invalid email" }] }
 ```
 
-Common status codes: `400` malformed body, `401` no/expired owner session, `404` unknown record or route, `405` operation not allowed, `409` unique/relation conflict, `422` Zod validation failure, `500` unexpected error, `503` upload not configured.
+Common status codes: `400` malformed body, `401` no/expired owner session, `404` unknown record or route, `405` operation not allowed, `409` unique/relation conflict, `413` JSON body over 256 KB, `422` Zod validation failure, `500` unexpected error, `503` upload not configured.
 
 ## Authentication
 

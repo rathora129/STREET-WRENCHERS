@@ -14,6 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassCard, glassPanel } from '@/styles/glass';
 import { BOOKING_STAGES, stageIndex } from '@/lib/booking-stages';
 import { formatDate, formatDateTime } from '@/lib/utils';
 
@@ -109,9 +110,8 @@ const Layout = styled.div`
 `;
 
 const Card = styled.section`
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassPanel}
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.charcoal};
   overflow: hidden;
 `;
 
@@ -164,7 +164,7 @@ const Summary = styled.dl`
   border-bottom: 1px solid ${({ theme }) => theme.colors.line};
 
   div {
-    background: ${({ theme }) => theme.colors.charcoal};
+    background: rgba(14, 14, 18, 0.4);
     padding: 15px clamp(18px, 3vw, 26px);
   }
 
@@ -302,9 +302,8 @@ const Side = styled.aside`
 `;
 
 const SideCard = styled.section`
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassCard}
   border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.charcoal};
   padding: 20px;
 
   h2 {

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { syncCustomerStats, syncLeadForBooking } from '@/lib/crm';
 import {
   ApiError,
   ok,
@@ -56,6 +57,10 @@ export const PATCH = route(async (request, { params }) => {
     data,
     ...(config.list.include ? { include: config.list.include } : {}),
   });
+
+  if (resource === 'bookings') {
+    await Promise.all([syncCustomerStats(item.customerId), syncLeadForBooking(item.id)]);
+  }
 
   return ok(serialize(item), NO_STORE);
 });

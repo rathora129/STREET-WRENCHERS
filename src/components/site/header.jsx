@@ -4,34 +4,82 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Menu, X, Phone, Calendar } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassDock, glassMenu } from '@/styles/glass';
 import { LOGO_SRC, SITE_NAV } from '@/lib/site';
 import { Button } from '@/components/ui/button';
 
-const Bar = styled.header`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+const Shell = styled.div`
+  position: relative;
   z-index: 90;
-  transition: background 260ms ease, border-color 260ms ease, backdrop-filter 260ms ease;
-  border-bottom: 1px solid ${({ $solid }) => ($solid ? 'rgba(255,255,255,0.08)' : 'transparent')};
-  background: ${({ $solid }) => ($solid ? 'rgba(8, 8, 10, 0.88)' : 'linear-gradient(180deg, rgba(8,8,10,0.72) 0%, rgba(8,8,10,0) 100%)')};
-  backdrop-filter: ${({ $solid }) => ($solid ? 'blur(18px) saturate(140%)' : 'none')};
+  height: ${({ theme }) => theme.layout.header};
+`;
+
+const StaticBar = styled.header`
+  position: absolute;
+  inset: 0 0 auto;
+  height: 100%;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(10, 10, 13, 0.72) 0%, rgba(8, 8, 10, 0.32) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+`;
+
+const FloatingBar = styled.header`
+  position: fixed;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 95;
+  border-radius: 18px;
+  ${glassDock}
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-130%);
+  transition:
+    opacity 220ms ease,
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 360ms;
+
+  ${media.reduce} {
+    transition: none;
+  }
+
+  ${({ $visible }) =>
+    $visible &&
+    css`
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+      transition:
+        opacity 220ms ease,
+        transform 360ms cubic-bezier(0.16, 1, 0.3, 1),
+        visibility 0s;
+    `}
 `;
 
 const Inner = styled.div`
   max-width: ${({ theme }) => theme.layout.container};
   margin-inline: auto;
   padding-inline: ${({ theme }) => theme.layout.gutter};
-  height: ${({ theme }) => theme.layout.header};
+  height: ${({ $floating, theme }) => ($floating ? '68px' : theme.layout.header)};
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  transition: height 320ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (max-width: 559px) {
+    height: ${({ $floating, theme }) => ($floating ? '62px' : theme.layout.header)};
+  }
+
+  ${media.reduce} {
+    transition: none;
+  }
 `;
 
 const Brand = styled(Link)`
@@ -104,6 +152,10 @@ const NavLink = styled(Link)`
   transition: color 160ms ease;
   padding-block: 10px;
 
+  ${media.xl} {
+    white-space: nowrap;
+  }
+
   &:hover {
     color: ${({ theme }) => theme.colors.white};
   }
@@ -120,18 +172,20 @@ const NavLink = styled(Link)`
 
 const Dropdown = styled.div`
   position: absolute;
-  top: calc(100% - 6px);
+  top: calc(100% - 2px);
   ${({ $align }) => ($align === 'right' ? 'right: -24px;' : 'left: -24px;')}
   min-width: 300px;
   padding: 18px;
-  background: rgba(14, 14, 17, 0.98);
-  border: 1px solid ${({ theme }) => theme.colors.line};
-  border-radius: 10px;
-  box-shadow: ${({ theme }) => theme.shadows.lift};
+  ${glassMenu}
+  border-radius: 14px;
   opacity: 0;
   visibility: hidden;
   transform: translateY(8px);
   transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+
+  ${media.reduce} {
+    transition: none;
+  }
 
   ${NavItem}:hover &,
   ${NavItem}:focus-within & {
@@ -145,13 +199,13 @@ const Dropdown = styled.div`
     justify-content: space-between;
     gap: 16px;
     padding: 9px 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 13px;
     color: ${({ theme }) => theme.colors.smoke};
     transition: background 140ms ease, color 140ms ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.07);
       color: ${({ theme }) => theme.colors.white};
     }
 
@@ -163,7 +217,7 @@ const Dropdown = styled.div`
 
   .all {
     margin-top: 8px;
-    border-top: 1px solid ${({ theme }) => theme.colors.line};
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 12px;
     color: ${({ theme }) => theme.colors.brand};
     font-size: 11px;
@@ -208,10 +262,22 @@ const MenuButton = styled.button`
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 1px solid ${({ theme }) => theme.colors.lineStrong};
-  border-radius: 6px;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
   color: ${({ theme }) => theme.colors.white};
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: border-color 160ms ease, background 160ms ease;
+
+  &:hover {
+    border-color: rgba(242, 106, 13, 0.5);
+    background: rgba(242, 106, 13, 0.1);
+  }
+
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    background: rgba(18, 18, 22, 0.9);
+  }
 
   ${media.lg} {
     display: none;
@@ -222,11 +288,19 @@ const Overlay = styled(motion.div)`
   position: fixed;
   inset: 0;
   z-index: 120;
-  background: #08080a;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   padding: 22px var(--mobile-gutter, 22px) 40px;
+  background:
+    radial-gradient(120% 80% at 90% 0%, rgba(242, 106, 13, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(8, 8, 10, 0.9), rgba(8, 8, 10, 0.82));
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  backdrop-filter: blur(20px) saturate(130%);
+
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    background: #08080a;
+  }
 `;
 
 const OverlayTop = styled.div`
@@ -264,14 +338,26 @@ const OverlayFoot = styled.div`
 
 export function Header({ settings, navModules = [], services = [] }) {
   const pathname = usePathname();
-  const [solid, setSolid] = useState(false);
+  const [floating, setFloating] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setSolid(window.scrollY > 24);
-    onScroll();
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const y = window.scrollY;
+      // Hysteresis keeps the dock from flickering around the threshold.
+      setFloating((current) => (current ? y > 24 : y > 80));
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
@@ -297,84 +383,102 @@ export function Header({ settings, navModules = [], services = [] }) {
   const phone = settings?.business?.phone;
   const nav = SITE_NAV;
 
+  const content = (variant) => (
+    <Inner $floating={variant === 'floating'}>
+      <Brand href="/" aria-label="Street Wrenchers home">
+        <LogoFrame>
+          <Image src={LOGO_SRC} alt="Street Wrenchers" fill sizes="48px" priority style={{ objectFit: 'contain' }} />
+        </LogoFrame>
+        <Wordmark>
+          <strong>STREET WRENCHERS</strong>
+          <span>Dubai · Auto Care</span>
+        </Wordmark>
+      </Brand>
+
+      <Nav aria-label="Main navigation">
+        {nav.slice(0, 3).map((item) =>
+          item.href === '/services' ? (
+            <NavItem key={item.href}>
+              <NavLink href="/services" $active={isActive('/services')}>
+                Services <ChevronDown size={13} aria-hidden="true" />
+              </NavLink>
+              <Dropdown>
+                {services.slice(0, 8).map((service) => (
+                  <Link key={service.id} href={`/services/${service.slug}`}>
+                    {service.name}
+                    <span>{service.category?.name}</span>
+                  </Link>
+                ))}
+                <Link href="/services" className="all">View all services →</Link>
+              </Dropdown>
+            </NavItem>
+          ) : (
+            <NavItem key={item.href}>
+              <NavLink href={item.href} $active={isActive(item.href)}>{item.label}</NavLink>
+            </NavItem>
+          ),
+        )}
+        {nav.slice(3).map((item) => (
+          <NavItem key={item.href}>
+            <NavLink href={item.href} $active={isActive(item.href)}>{item.label}</NavLink>
+          </NavItem>
+        ))}
+        {navModules.length ? (
+          <NavItem>
+            <NavLink as="span" style={{ cursor: 'default' }}>
+              More <ChevronDown size={13} aria-hidden="true" />
+            </NavLink>
+            <Dropdown $align="right">
+              {navModules.map((module) => (
+                <Link key={module.href} href={module.href} style={{ alignItems: 'center' }}>
+                  {module.label}
+                  {module.status === 'COMING_SOON' ? <span className="soon">Soon</span> : null}
+                </Link>
+              ))}
+            </Dropdown>
+          </NavItem>
+        ) : null}
+      </Nav>
+
+      <Actions>
+        {phone ? (
+          <PhoneLink href={`tel:${phone.replace(/[^\d+]/g, '')}`}>
+            <Phone size={14} aria-hidden="true" />
+            {phone}
+          </PhoneLink>
+        ) : null}
+        <BookDesktop>
+          <Button
+            href="/book"
+            size="sm"
+            icon={false}
+            leftIcon={<Calendar size={15} strokeWidth={1.9} aria-hidden="true" />}
+          >
+            Book a service
+          </Button>
+        </BookDesktop>
+        <MenuButton type="button" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open}>
+          <Menu size={20} />
+        </MenuButton>
+      </Actions>
+    </Inner>
+  );
+
   return (
     <>
-      <Bar $solid={solid}>
-        <Inner>
-          <Brand href="/" aria-label="Street Wrenchers home">
-            <LogoFrame>
-              <Image src={LOGO_SRC} alt="Street Wrenchers" fill sizes="48px" priority style={{ objectFit: 'contain' }} />
-            </LogoFrame>
-            <Wordmark>
-              <strong>STREET WRENCHERS</strong>
-              <span>Dubai · Auto Care</span>
-            </Wordmark>
-          </Brand>
+      <Shell>
+        <StaticBar aria-hidden={floating} inert={floating}>
+          {content('static')}
+        </StaticBar>
+      </Shell>
 
-          <Nav aria-label="Main navigation">
-            {nav.slice(0, 3).map((item) =>
-              item.href === '/services' ? (
-                <NavItem key={item.href}>
-                  <NavLink href="/services" $active={isActive('/services')}>
-                    Services <ChevronDown size={13} aria-hidden="true" />
-                  </NavLink>
-                  <Dropdown>
-                    {services.slice(0, 8).map((service) => (
-                      <Link key={service.id} href={`/services/${service.slug}`}>
-                        {service.name}
-                        <span>{service.category?.name}</span>
-                      </Link>
-                    ))}
-                    <Link href="/services" className="all">View all services →</Link>
-                  </Dropdown>
-                </NavItem>
-              ) : (
-                <NavItem key={item.href}>
-                  <NavLink href={item.href} $active={isActive(item.href)}>{item.label}</NavLink>
-                </NavItem>
-              ),
-            )}
-            {nav.slice(3).map((item) => (
-              <NavItem key={item.href}>
-                <NavLink href={item.href} $active={isActive(item.href)}>{item.label}</NavLink>
-              </NavItem>
-            ))}
-            {navModules.length ? (
-              <NavItem>
-                <NavLink as="span" style={{ cursor: 'default' }}>
-                  More <ChevronDown size={13} aria-hidden="true" />
-                </NavLink>
-                <Dropdown $align="right">
-                  {navModules.map((module) => (
-                    <Link key={module.href} href={module.href} style={{ alignItems: 'center' }}>
-                      {module.label}
-                      {module.status === 'COMING_SOON' ? <span className="soon">Soon</span> : null}
-                    </Link>
-                  ))}
-                </Dropdown>
-              </NavItem>
-            ) : null}
-          </Nav>
-
-          <Actions>
-            {phone ? (
-              <PhoneLink href={`tel:${phone.replace(/[^\d+]/g, '')}`}>
-                <Phone size={14} aria-hidden="true" />
-                {phone}
-              </PhoneLink>
-            ) : null}
-            <BookDesktop>
-              <Button href="/book" size="sm" icon={false}>
-                <Calendar size={14} style={{ marginRight: 2 }} aria-hidden="true" />
-                Book a service
-              </Button>
-            </BookDesktop>
-            <MenuButton type="button" onClick={() => setOpen(true)} aria-label="Open menu" aria-expanded={open}>
-              <Menu size={20} />
-            </MenuButton>
-          </Actions>
-        </Inner>
-      </Bar>
+      <FloatingBar
+        $visible={floating}
+        aria-hidden={floating ? undefined : 'true'}
+        inert={floating ? undefined : true}
+      >
+        {content('floating')}
+      </FloatingBar>
 
       <AnimatePresence>
         {open ? (
@@ -413,7 +517,13 @@ export function Header({ settings, navModules = [], services = [] }) {
             </OverlayNav>
 
             <OverlayFoot>
-              <Button href="/book" onClick={() => setOpen(false)}>Book a service</Button>
+              <Button
+                href="/book"
+                onClick={() => setOpen(false)}
+                leftIcon={<Calendar size={16} strokeWidth={1.9} aria-hidden="true" />}
+              >
+                Book a service
+              </Button>
               {phone ? (
                 <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
                   <Phone size={15} /> {phone}

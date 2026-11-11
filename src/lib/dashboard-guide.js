@@ -113,7 +113,7 @@ export const HELP_TOPICS = [
       'Brands power the brands directory, the brand landing pages and the vehicle selector in the booking form. Each brand can have a logo and its own vehicle photo, plus a list of models.',
     steps: [
       'Open Car Brands and add a brand or edit an existing one.',
-      'Upload the brand logo and a brand-specific vehicle image. If no vehicle image is uploaded, the site shows the logo plate and then an initials fallback — it never substitutes another brand’s photo.',
+      'Upload the brand logo and a brand-specific vehicle image. If no vehicle image is uploaded, the site shows the logo plate — your uploaded logo first, then the built-in manufacturer mark. It never substitutes another brand’s photo.',
       'Set the sort order and toggle Active to control whether the brand is visible.',
       'Open Vehicle Models to add or edit models for that brand, set their sort order and visibility.',
       'Preview the public brand page from the brand card on the website.',
@@ -377,7 +377,7 @@ export const HELP_FAQS = [
   {
     question: 'Why do I see a vehicle image missing on a brand card?',
     answer:
-      'If a brand has no vehicle image, the site shows its logo, then its initials. It never shows another brand’s vehicle. Upload a brand-specific image from Car Brands to use the full photo treatment.',
+      'If a brand has no vehicle image, the site shows its logo plate: your uploaded logo first, then the built-in manufacturer mark. It never shows another brand’s vehicle. Upload a brand-specific image from Car Brands to use the full photo treatment.',
   },
 ];
 

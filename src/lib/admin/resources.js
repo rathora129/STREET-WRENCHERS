@@ -244,6 +244,19 @@ export const RESOURCES = {
       search: ['name', 'phone', 'email', 'notes'],
       filters: {},
     },
+    detailInclude: {
+      bookings: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          service: { select: { id: true, name: true, slug: true } },
+          package: { select: { id: true, name: true } },
+        },
+      },
+      leads: {
+        orderBy: { createdAt: 'desc' },
+        include: { activities: { orderBy: { createdAt: 'desc' }, take: 50 } },
+      },
+    },
     transform: async (data) => cleanJson(data),
   },
 

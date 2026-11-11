@@ -2,6 +2,7 @@
 
 import styled from 'styled-components';
 import { media } from '@/styles/theme';
+import { glassPanel } from '@/styles/glass';
 
 export const Container = styled.div`
   width: 100%;
@@ -19,7 +20,7 @@ export const Narrow = styled.div`
 
 export const Section = styled.section`
   position: relative;
-  padding-block: ${({ $compact }) => ($compact ? 'clamp(48px, 6vw, 80px)' : 'clamp(72px, 10vw, 136px)')};
+  padding-block: ${({ $compact }) => ($compact ? 'clamp(38px, 4.4vw, 60px)' : 'clamp(52px, 6vw, 88px)')};
   background: ${({ $tone, theme }) => {
     if ($tone === 'coal') return theme.colors.coal;
     if ($tone === 'charcoal') return theme.colors.charcoal;
@@ -69,8 +70,7 @@ export const Split = styled.div`
 `;
 
 export const Panel = styled.div`
-  background: ${({ theme }) => theme.colors.charcoal};
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassPanel}
   border-radius: ${({ theme }) => theme.radii.md};
   padding: ${({ $pad }) => $pad || 'clamp(22px, 3vw, 34px)'};
 `;

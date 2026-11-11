@@ -8,6 +8,7 @@ import { Form, Formik, Field as FormikField } from 'formik';
 import * as Yup from 'yup';
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Car, Wrench, CalendarClock, UserRound } from 'lucide-react';
 import { media } from '@/styles/theme';
+import { glassPanel } from '@/styles/glass';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Field, LabelText, Input, Textarea, Select, FieldError, FormStatus } from '@/components/ui/field';
@@ -26,9 +27,8 @@ const Shell = styled.div`
 `;
 
 const Card = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassPanel}
   border-radius: ${({ theme }) => theme.radii.lg};
-  background: ${({ theme }) => theme.colors.charcoal};
   padding: clamp(22px, 3vw, 38px);
 `;
 
@@ -182,9 +182,8 @@ const BackButton = styled.button`
 
 const Summary = styled.aside`
   position: static;
-  border: 1px solid ${({ theme }) => theme.colors.line};
+  ${glassPanel}
   border-radius: ${({ theme }) => theme.radii.lg};
-  background: linear-gradient(180deg, #111115 0%, #0b0b0e 100%);
   padding: clamp(20px, 2.5vw, 28px);
   display: flex;
   flex-direction: column;

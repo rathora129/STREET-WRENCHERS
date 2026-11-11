@@ -11,8 +11,9 @@ const Strip = styled.nav`
 
 const Pill = styled(Link)`
   padding: 9px 14px;
-  border: 1px solid ${({ theme }) => theme.colors.lineStrong};
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: ${({ theme }) => theme.radii.pill};
+  background: rgba(20, 20, 24, 0.55);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -22,7 +23,7 @@ const Pill = styled(Link)`
   &:hover {
     border-color: ${({ theme }) => theme.colors.brand};
     color: ${({ theme }) => theme.colors.white};
-    background: rgba(242, 106, 13, 0.08);
+    background: rgba(242, 106, 13, 0.1);
   }
 `;
 

@@ -27,16 +27,40 @@ export function fail(message, status = 400, details) {
   return NextResponse.json({ ok: false, error: message, details }, { status });
 }
 
+export function tooManyRequests(retryAfter) {
+  return NextResponse.json(
+    { ok: false, error: 'Too many requests. Please try again later.' },
+    { status: 429, headers: { 'Retry-After': String(retryAfter), 'Cache-Control': 'no-store' } },
+  );
+}
+
 export async function requireOwner() {
   const owner = await getCurrentOwner();
   if (!owner) throw new ApiError(401, 'Authentication required');
   return owner;
 }
 
+const MAX_JSON_BYTES = 256 * 1024;
+
 export async function readJsonBody(request, schema) {
+  const declared = Number(request.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > MAX_JSON_BYTES) {
+    throw new ApiError(413, 'Request body is too large');
+  }
+
+  let raw;
+  try {
+    raw = await request.text();
+  } catch {
+    throw new ApiError(400, 'Request body must be valid JSON');
+  }
+  if (Buffer.byteLength(raw, 'utf8') > MAX_JSON_BYTES) {
+    throw new ApiError(413, 'Request body is too large');
+  }
+
   let body;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
     throw new ApiError(400, 'Request body must be valid JSON');
   }
