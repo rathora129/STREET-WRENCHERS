@@ -105,46 +105,60 @@ const priced = (plan) =>
   `${plan.billingPeriod === 'YEAR' ? 'AED' : 'AED'} ${plan.price} / ${plan.billingPeriod === 'YEAR' ? 'year' : String(plan.billingPeriod).toLowerCase()}`;
 
 export function AmcView({ page, plans = [], faqs = [] }) {
-  const hero = page?.sections?.find((section) => section.type === 'PAGE_HERO');
-  const plansSection = page?.sections?.find((section) => section.key === 'plans');
+  const orderedSections = page?.sections || [];
+  const hero = orderedSections.find((section) => section.type === 'PAGE_HERO');
+  const plansSection = orderedSections.find((section) => section.key === 'plans');
   const includedRows = Array.from(new Set(plans.flatMap((plan) => plan.inclusions || [])));
+
+  const heroBlock = (
+    <PageHero
+      key="hero"
+      eyebrow={hero?.eyebrow || 'Annual maintenance'}
+      heading={hero?.heading || 'Plan the year. Skip the surprises.'}
+      subheading={hero?.subheading}
+      image={hero?.image || '/assets/images/hero/engine.jpg'}
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'AMC Plans', href: '/amc' }]}
+    />
+  );
+
+  const plansBlock = (
+    <Section key="plans" $tone="coal">
+      <Container>
+        <SectionHead
+          eyebrow={plansSection?.eyebrow || 'Plans'}
+          title={plansSection?.heading || 'Choose the level of cover that fits.'}
+          intro={plansSection?.subheading}
+        />
+        {plans.length ? (
+          <Grid $cols={1} $md={2} $lg={3}>
+            {plans.map((plan) => (
+              <Reveal key={plan.id}>
+                <AmcCard plan={plan} featured={plan.isFeatured} />
+              </Reveal>
+            ))}
+          </Grid>
+        ) : (
+          <Panel>
+            <Heading $size="sm" $width="20ch">Plans are being finalised.</Heading>
+            <Intro style={{ marginTop: 12 }}>
+              Annual maintenance plans will be published here once confirmed. Contact the team to discuss coverage
+              in the meantime.
+            </Intro>
+          </Panel>
+        )}
+      </Container>
+    </Section>
+  );
+
+  const blockFor = (section) => {
+    if (section.type === 'PAGE_HERO') return heroBlock;
+    if (section.key === 'plans') return plansBlock;
+    return null;
+  };
 
   return (
     <>
-      <PageHero
-        eyebrow={hero?.eyebrow || 'Annual maintenance'}
-        heading={hero?.heading || 'Plan the year. Skip the surprises.'}
-        subheading={hero?.subheading}
-        image={hero?.image || '/assets/images/hero/engine.jpg'}
-        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'AMC Plans', href: '/amc' }]}
-      />
-
-      <Section $tone="coal">
-        <Container>
-          <SectionHead
-            eyebrow={plansSection?.eyebrow || 'Plans'}
-            title={plansSection?.heading || 'Choose the level of cover that fits.'}
-            intro={plansSection?.subheading}
-          />
-          {plans.length ? (
-            <Grid $cols={1} $md={2} $lg={3}>
-              {plans.map((plan) => (
-                <Reveal key={plan.id}>
-                  <AmcCard plan={plan} featured={plan.isFeatured} />
-                </Reveal>
-              ))}
-            </Grid>
-          ) : (
-            <Panel>
-              <Heading $size="sm" $width="20ch">Plans are being finalised.</Heading>
-              <Intro style={{ marginTop: 12 }}>
-                Annual maintenance plans will be published here once confirmed. Contact the team to discuss coverage
-                in the meantime.
-              </Intro>
-            </Panel>
-          )}
-        </Container>
-      </Section>
+      {orderedSections.map(blockFor).filter(Boolean)}
 
       {plans.length > 1 ? (
         <Section $tone="charcoal">

@@ -119,26 +119,37 @@ function FaqsSection({ section, faqs }) {
 
 export function ContentPage({ page }) {
   const sections = page?.sections || [];
-  const hero = sections.find((section) => section.type === 'PAGE_HERO') || sections[0];
-  const rest = sections.filter((section) => section !== hero);
+  const heroIndex = sections.findIndex((section) => section.type === 'PAGE_HERO');
+  // Pages without an explicit PAGE_HERO keep the historical header fallback.
+  const hero = heroIndex >= 0 ? sections[heroIndex] : sections[0];
+  const ordered = heroIndex >= 0 ? sections : sections.slice(1);
   const path = `/${page.slug}`;
   const breadcrumbs = [
     { label: 'Home', href: '/' },
     { label: page.title, href: path },
   ];
+  let bodyIndex = -1;
 
   return (
     <>
-      <PageHero
-        eyebrow={hero?.eyebrow}
-        heading={hero?.heading || page.title}
-        subheading={hero?.subheading}
-        image={hero?.image}
-        imageAlt={hero?.imageAlt}
-        breadcrumbs={breadcrumbs}
-      />
+      {ordered.map((section) => {
+        if (section === hero) {
+          return (
+            <PageHero
+              key={section.id || section.key || 'hero'}
+              eyebrow={hero?.eyebrow}
+              heading={hero?.heading || page.title}
+              subheading={hero?.subheading}
+              image={hero?.image}
+              imageAlt={hero?.imageAlt}
+              breadcrumbs={breadcrumbs}
+            />
+          );
+        }
 
-      {rest.map((section, index) => {
+        bodyIndex += 1;
+        const index = bodyIndex;
+
         switch (section.type) {
           case 'TEXT':
           case 'INTRO':

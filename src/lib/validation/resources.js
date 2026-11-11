@@ -290,6 +290,18 @@ export const pageSectionSchema = z.object({
   isVisible: boolean.default(true),
 });
 
+const sectionIdList = z
+  .array(z.string().trim().min(1).max(64))
+  .min(1)
+  .max(500)
+  .refine((ids) => new Set(ids).size === ids.length, 'Section ids must be unique');
+
+export const sectionReorderSchema = z.object({
+  pageId: z.string().trim().min(1).max(64),
+  orderedIds: sectionIdList,
+  previousIds: sectionIdList.optional(),
+});
+
 export const bannerSchema = z.object({
   title: requiredString(240, 2),
   eyebrow: optionalString(120),

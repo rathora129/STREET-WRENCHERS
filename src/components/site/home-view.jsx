@@ -223,6 +223,7 @@ function ModuleSection({ moduleKey, config, even }) {
 export function HomeView({ data }) {
   const { page, banners, services, packages, plans, brands, media, testimonials, faqs, blogs, settings } = data;
   const sections = sectionMap(page);
+  const orderedSections = page?.sections || [];
   const hero = sections.hero || {};
   const intro = sections.intro || {};
   const servicesSection = sections.services || {};
@@ -240,11 +241,19 @@ export function HomeView({ data }) {
   const whyPoints = why.data?.points || [];
   const steps = process.data?.steps || [];
 
-  return (
-    <>
-      <HeroSlider banners={banners} section={hero} options={settings.banner} />
+  let promoSeen = 0;
+  const promoEven = {};
+  orderedSections.forEach((section) => {
+    if (section.type !== 'MODULE_PROMO') return;
+    promoEven[section.key] = promoSeen % 2 === 1;
+    promoSeen += 1;
+  });
 
-      <Section $tone="coal" $compact>
+  const blocks = {
+    hero: <HeroSlider key="hero" banners={banners} section={hero} options={settings.banner} />,
+
+    intro: (
+      <Section key="intro" $tone="coal" $compact>
         <Container>
           <Split $ratio="1.05fr 0.95fr">
             <IntroCopy>
@@ -274,8 +283,10 @@ export function HomeView({ data }) {
           </Split>
         </Container>
       </Section>
+    ),
 
-      <Section>
+    services: (
+      <Section key="services">
         <Container>
           <SectionHead
             eyebrow={servicesSection.eyebrow || 'Services'}
@@ -303,8 +314,10 @@ export function HomeView({ data }) {
           )}
         </Container>
       </Section>
+    ),
 
-      <Section $tone="charcoal">
+    packages: (
+      <Section key="packages" $tone="charcoal">
         <Container>
           <SectionHead
             eyebrow={packagesSection.eyebrow || 'Servicing'}
@@ -333,8 +346,10 @@ export function HomeView({ data }) {
           </div>
         </Container>
       </Section>
+    ),
 
-      <Section>
+    amc: (
+      <Section key="amc">
         <Container>
           <SectionHead
             eyebrow={amcSection.eyebrow || 'Annual maintenance'}
@@ -366,8 +381,10 @@ export function HomeView({ data }) {
           </Banner>
         </Container>
       </Section>
+    ),
 
-      <Section $tone="coal" $compact>
+    brands: (
+      <Section key="brands" $tone="coal" $compact>
         <Container>
           <SectionHead
             eyebrow={brandsSection.eyebrow || 'All makes'}
@@ -388,9 +405,10 @@ export function HomeView({ data }) {
           />
         </Container>
       </Section>
+    ),
 
-      {whyPoints.length ? (
-        <Section>
+    why: whyPoints.length ? (
+        <Section key="why">
           <Container>
             <SectionHead
               eyebrow={why.eyebrow || 'Why Street Wrenchers'}
@@ -407,10 +425,10 @@ export function HomeView({ data }) {
             </Points>
           </Container>
         </Section>
-      ) : null}
+      ) : null,
 
-      {steps.length ? (
-        <Section $tone="charcoal">
+    process: steps.length ? (
+        <Section key="process" $tone="charcoal">
           <Container>
             <SectionHead
               eyebrow={process.eyebrow || 'How it works'}
@@ -428,10 +446,10 @@ export function HomeView({ data }) {
             </Steps>
           </Container>
         </Section>
-      ) : null}
+      ) : null,
 
-      {media.length ? (
-        <Section>
+    gallery: media.length ? (
+        <Section key="gallery">
           <Container>
             <SectionHead
               eyebrow={gallery.eyebrow || 'Gallery'}
@@ -448,9 +466,10 @@ export function HomeView({ data }) {
             </GalleryWrap>
           </Container>
         </Section>
-      ) : null}
+      ) : null,
 
-      <Section $tone="coal">
+    testimonials: (
+      <Section key="testimonials" $tone="coal">
         <Container>
           <SectionHead
             eyebrow={testimonialsSection.eyebrow || 'Reviews'}
@@ -464,11 +483,28 @@ export function HomeView({ data }) {
           )}
         </Container>
       </Section>
+    ),
 
-      <ModuleSection moduleKey="CAR_RENTAL" config={settings.modules?.CAR_RENTAL} even={false} />
-      <ModuleSection moduleKey="CAR_SALES" config={settings.modules?.CAR_SALES} even />
+    rental: (
+      <ModuleSection
+        key="rental"
+        moduleKey="CAR_RENTAL"
+        config={settings.modules?.CAR_RENTAL}
+        even={Boolean(promoEven.rental)}
+      />
+    ),
 
-      <Section>
+    sales: (
+      <ModuleSection
+        key="sales"
+        moduleKey="CAR_SALES"
+        config={settings.modules?.CAR_SALES}
+        even={Boolean(promoEven.sales)}
+      />
+    ),
+
+    blog: (
+      <Section key="blog">
         <Container>
           <SectionHead
             eyebrow={blogSection.eyebrow || 'Journal'}
@@ -497,9 +533,10 @@ export function HomeView({ data }) {
           )}
         </Container>
       </Section>
+    ),
 
-      {faqs.length ? (
-        <Section $tone="charcoal">
+    faqs: faqs.length ? (
+        <Section key="faqs" $tone="charcoal">
           <Container>
             <FaqSplit>
               <div>
@@ -520,9 +557,10 @@ export function HomeView({ data }) {
             </FaqSplit>
           </Container>
         </Section>
-      ) : null}
+      ) : null,
 
-      <Section id="contact">
+    contact: (
+      <Section key="contact" id="contact">
         <Container>
           <ContactSection
             heading={contact.heading || 'Ready when your car is.'}
@@ -531,6 +569,8 @@ export function HomeView({ data }) {
           />
         </Container>
       </Section>
-    </>
-  );
+    ),
+  };
+
+  return <>{orderedSections.map((section) => blocks[section.key]).filter(Boolean)}</>;
 }

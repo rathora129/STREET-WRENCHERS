@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import styled from 'styled-components';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import styled, { createGlobalStyle } from 'styled-components';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   Download,
+  GripVertical,
   Inbox,
   Pencil,
   Plus,
@@ -20,6 +21,110 @@ import { formatPrice, toDateInputValue } from '@/lib/utils';
 
 const PageFlash = styled.div`
   margin-bottom: 14px;
+`;
+
+const ReorderGlobalStyle = createGlobalStyle`
+  body.sw-reorder-active {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  body.sw-reorder-active * {
+    cursor: grabbing !important;
+  }
+`;
+
+const ReorderHint = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.dim};
+  line-height: 1.4;
+
+  svg { color: ${({ theme }) => theme.colors.brand}; flex: none; }
+
+  @media (max-width: 640px) {
+    margin-left: 0;
+  }
+`;
+
+const DragHandle = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 30px;
+  margin-left: -5px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.dim};
+  cursor: grab;
+  touch-action: none;
+
+  &:hover:not(:disabled) {
+    color: ${({ theme }) => theme.colors.white};
+    border-color: ${({ theme }) => theme.colors.line};
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &:active:not(:disabled) { cursor: grabbing; }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brand};
+    outline-offset: 2px;
+  }
+
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+`;
+
+const ReorderTableWrap = styled(UI.TableWrap)`
+  tbody tr[data-reorder-row] { transition: background 120ms ease; }
+
+  tbody tr.is-dragging td {
+    background: rgba(242, 106, 13, 0.07);
+    border-top: 1px dashed rgba(242, 106, 13, 0.7);
+    border-bottom: 1px dashed rgba(242, 106, 13, 0.7);
+  }
+
+  tbody tr.is-dragging td:first-child { border-left: 1px dashed rgba(242, 106, 13, 0.7); }
+  tbody tr.is-dragging td:last-child { border-right: 1px dashed rgba(242, 106, 13, 0.7); }
+  tbody tr.is-dragging td > * { opacity: 0.4; }
+
+  tbody tr.is-dragging:last-child td { border-bottom: 1px dashed rgba(242, 106, 13, 0.7); }
+
+  @media (prefers-reduced-motion: reduce) {
+    tbody tr[data-reorder-row] { transition: none; }
+  }
+`;
+
+const DragGhost = styled.div`
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 9px 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(242, 106, 13, 0.55);
+  background: rgba(18, 18, 23, 0.97);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  transform: translate(-50%, -135%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  svg { color: ${({ theme }) => theme.colors.brand}; flex: none; }
+  span { overflow: hidden; text-overflow: ellipsis; }
 `;
 
 const ImageRow = styled.div`
@@ -116,6 +221,7 @@ export function ResourceManager({
   emptyBody = 'Records you add will appear in this list.',
   modalWide = false,
   helpTopic = null,
+  reorder = null,
 }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -130,6 +236,14 @@ export function ResourceManager({
   const [fieldErrors, setFieldErrors] = useState({});
   const [confirming, setConfirming] = useState(null);
   const [flash, setFlash] = useState(null);
+  const [orderPreview, setOrderPreview] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
+  const [dragLabel, setDragLabel] = useState('');
+  const rowRefs = useRef(new Map());
+  const dragRef = useRef(null);
+  const flipTopsRef = useRef(null);
+  const ghostRef = useRef(null);
+  const lastPointerRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -218,8 +332,284 @@ export function ResourceManager({
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: ({ orderedIds, previousIds }) =>
+      api(reorder.endpoint, {
+        method: 'PATCH',
+        body: JSON.stringify({ ...(reorder.scope || {}), orderedIds, previousIds }),
+      }),
+  });
+
   const items = listQuery.data?.items || [];
   const pagination = listQuery.data?.pagination || { page, perPage: 20, total: 0, totalPages: 1 };
+
+  const reorderEnabled = Boolean(reorder?.endpoint);
+  const hasActiveFilters = Object.entries(filterValues).some(([, value]) => value && value !== 'ALL');
+  const reorderAllowed =
+    reorderEnabled &&
+    items.length > 1 &&
+    !term &&
+    !hasActiveFilters &&
+    pagination.totalPages <= 1 &&
+    items.length === pagination.total;
+  const reorderBusy = reorderMutation.isPending;
+
+  const displayItems = useMemo(() => {
+    if (!orderPreview) return items;
+    const byId = new Map(items.map((item) => [item.id, item]));
+    return orderPreview.map((id) => byId.get(id)).filter(Boolean);
+  }, [items, orderPreview]);
+
+  useEffect(() => {
+    setOrderPreview(null);
+  }, [listParams]);
+
+  useEffect(
+    () => () => {
+      const drag = dragRef.current;
+      if (drag?.handlers) {
+        window.removeEventListener('pointermove', drag.handlers.move);
+        window.removeEventListener('pointerup', drag.handlers.end);
+        window.removeEventListener('pointercancel', drag.handlers.end);
+        window.removeEventListener('keydown', drag.handlers.key, true);
+      }
+      if (drag?.autoFrame) cancelAnimationFrame(drag.autoFrame);
+      dragRef.current = null;
+      document.body.classList.remove('sw-reorder-active');
+    },
+    [],
+  );
+
+  useLayoutEffect(() => {
+    if (draggingId && ghostRef.current) {
+      paintGhost(lastPointerRef.current.x, lastPointerRef.current.y);
+    }
+  }, [draggingId]);
+
+  useLayoutEffect(() => {
+    const previousTops = flipTopsRef.current;
+    flipTopsRef.current = null;
+    if (!previousTops || !previousTops.size) return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const animated = [];
+    for (const [id, top] of previousTops) {
+      const element = rowRefs.current.get(id);
+      if (!element) continue;
+      const delta = top - element.getBoundingClientRect().top;
+      if (Math.abs(delta) < 1) continue;
+      element.style.transition = 'none';
+      element.style.transform = `translateY(${delta}px)`;
+      animated.push(element);
+    }
+    if (!animated.length) return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      for (const element of animated) {
+        element.style.transition = 'transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+        element.style.transform = '';
+      }
+    });
+    const timer = setTimeout(() => {
+      for (const element of animated) {
+        element.style.transition = '';
+        element.style.transform = '';
+      }
+    }, 240);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [orderPreview]);
+
+  function reorderLabel(row) {
+    if (reorder?.getLabel) return reorder.getLabel(row);
+    return row.key || row.heading || row.title || row.name || 'Item';
+  }
+
+  function paintGhost(x, y) {
+    lastPointerRef.current = { x, y };
+    const element = ghostRef.current;
+    if (!element) return;
+    const half = element.offsetWidth / 2;
+    const minX = half + 8;
+    const maxX = Math.max(minX, window.innerWidth - half - 8);
+    element.style.left = `${Math.min(Math.max(x, minX), maxX)}px`;
+    element.style.top = `${y}px`;
+  }
+
+  function captureRowTops(order) {
+    const tops = new Map();
+    for (const id of order) {
+      const element = rowRefs.current.get(id);
+      if (element) tops.set(id, element.getBoundingClientRect().top);
+    }
+    return tops;
+  }
+
+  function placeDragged(drag, clientY) {
+    const remaining = drag.order.filter((id) => id !== drag.id);
+    let target = 0;
+    for (const id of drag.order) {
+      if (id === drag.id) continue;
+      const element = rowRefs.current.get(id);
+      if (!element) continue;
+      const rect = element.getBoundingClientRect();
+      if (clientY > rect.top + rect.height / 2) target += 1;
+    }
+    if (target === drag.order.indexOf(drag.id)) return;
+
+    const next = remaining.slice();
+    next.splice(target, 0, drag.id);
+    drag.order = next;
+    flipTopsRef.current = captureRowTops(next);
+    setOrderPreview(next);
+  }
+
+  function autoScrollStep() {
+    const drag = dragRef.current;
+    if (!drag || !drag.active) return;
+    if (!drag.autoSpeed) {
+      drag.autoFrame = null;
+      return;
+    }
+    window.scrollBy(0, drag.autoSpeed);
+    placeDragged(drag, drag.lastY);
+    drag.autoFrame = requestAnimationFrame(autoScrollStep);
+  }
+
+  function handleDragMove(event) {
+    const drag = dragRef.current;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    event.preventDefault();
+    drag.lastY = event.clientY;
+    paintGhost(event.clientX, event.clientY);
+
+    if (!drag.active) {
+      if (Math.abs(event.clientY - drag.startY) < 6) return;
+      drag.active = true;
+      setDraggingId(drag.id);
+      document.body.classList.add('sw-reorder-active');
+    }
+
+    const edge = 84;
+    if (event.clientY < edge) {
+      drag.autoSpeed = -Math.ceil(((edge - event.clientY) / edge) * 18);
+    } else if (event.clientY > window.innerHeight - edge) {
+      drag.autoSpeed = Math.ceil(((event.clientY - (window.innerHeight - edge)) / edge) * 18);
+    } else {
+      drag.autoSpeed = 0;
+    }
+
+    placeDragged(drag, event.clientY);
+
+    if (drag.autoSpeed && !drag.autoFrame) drag.autoFrame = requestAnimationFrame(autoScrollStep);
+  }
+
+  function finishDrag() {
+    const drag = dragRef.current;
+    if (drag?.handlers) {
+      window.removeEventListener('pointermove', drag.handlers.move);
+      window.removeEventListener('pointerup', drag.handlers.end);
+      window.removeEventListener('pointercancel', drag.handlers.end);
+      window.removeEventListener('keydown', drag.handlers.key, true);
+    }
+    if (drag?.autoFrame) cancelAnimationFrame(drag.autoFrame);
+    dragRef.current = null;
+    document.body.classList.remove('sw-reorder-active');
+    setDraggingId(null);
+  }
+
+  function handleDragEnd(event) {
+    const drag = dragRef.current;
+    if (!drag || (event?.pointerId !== undefined && event.pointerId !== drag.pointerId)) return;
+
+    finishDrag();
+    if (!drag.active) {
+      setOrderPreview(null);
+      return;
+    }
+
+    const previousOrder = drag.previousOrder;
+    const nextOrder = drag.order;
+    if (nextOrder.join('|') === previousOrder.join('|')) {
+      setOrderPreview(null);
+      return;
+    }
+    commitOrder(nextOrder, previousOrder);
+  }
+
+  function handleDragKey(event) {
+    if (!dragRef.current || event.key !== 'Escape') return;
+    finishDrag();
+    setOrderPreview(null);
+  }
+
+  function startDrag(event, row) {
+    if (!reorderAllowed || reorderBusy || event.button > 0) return;
+    event.preventDefault();
+
+    const order = (orderPreview || items.map((item) => item.id)).slice();
+    if (order.length < 2 || !order.includes(row.id)) return;
+
+    const handlers = { move: handleDragMove, end: handleDragEnd, key: handleDragKey };
+    dragRef.current = {
+      pointerId: event.pointerId,
+      id: row.id,
+      startY: event.clientY,
+      lastY: event.clientY,
+      active: false,
+      autoSpeed: 0,
+      autoFrame: null,
+      order,
+      previousOrder: items.map((item) => item.id),
+      handlers,
+    };
+    lastPointerRef.current = { x: event.clientX, y: event.clientY };
+    setDragLabel(reorderLabel(row));
+
+    window.addEventListener('pointermove', handlers.move, { passive: false });
+    window.addEventListener('pointerup', handlers.end);
+    window.addEventListener('pointercancel', handlers.end);
+    window.addEventListener('keydown', handlers.key, true);
+  }
+
+  async function commitOrder(orderedIds, previousIds) {
+    setOrderPreview(orderedIds);
+    try {
+      await reorderMutation.mutateAsync({ orderedIds, previousIds });
+      queryClient.setQueryData(['admin', resource, listParams], (current) => {
+        if (!current?.items) return current;
+        const byId = new Map(current.items.map((item) => [item.id, item]));
+        return { ...current, items: orderedIds.map((id) => byId.get(id)).filter(Boolean) };
+      });
+      setOrderPreview(null);
+      setFlash({ tone: 'success', text: 'Order saved. The website now uses this sequence.' });
+      queryClient.invalidateQueries({ queryKey: ['admin', resource] });
+    } catch (error) {
+      setOrderPreview(null);
+      setFlash({ tone: 'error', text: `Could not save the new order: ${error.message}` });
+    }
+  }
+
+  function handleKeyReorder(event, row) {
+    if (!reorderAllowed || reorderBusy) return;
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+
+    const persisted = items.map((item) => item.id);
+    const order = (orderPreview || persisted).slice();
+    const index = order.indexOf(row.id);
+    const target = event.key === 'ArrowUp' ? index - 1 : index + 1;
+    if (index < 0 || target < 0 || target >= order.length) return;
+
+    const next = order.slice();
+    next.splice(index, 1);
+    next.splice(target, 0, row.id);
+    flipTopsRef.current = captureRowTops(next);
+    commitOrder(next, persisted);
+  }
 
   function optionsFor(field) {
     if (Array.isArray(field.options)) {
@@ -448,6 +838,13 @@ export function ResourceManager({
 
   return (
     <>
+      {reorderEnabled ? <ReorderGlobalStyle /> : null}
+      {draggingId ? (
+        <DragGhost ref={ghostRef} aria-hidden="true">
+          <GripVertical size={14} />
+          <span>{dragLabel}</span>
+        </DragGhost>
+      ) : null}
       <UI.PageHead>
         <UI.HeadText>
           <span className="eyebrow">{eyebrow}</span>
@@ -518,6 +915,22 @@ export function ResourceManager({
               ))}
             </UI.FilterSelect>
           ))}
+          {reorderEnabled ? (
+            reorderAllowed ? (
+              <ReorderHint>
+                <GripVertical size={13} /> Drag rows to reorder — changes save automatically
+              </ReorderHint>
+            ) : (
+              <ReorderHint>
+                {items.length < 2
+                  ? 'Add at least two sections to reorder.'
+                  : pagination.totalPages > 1
+                    ? 'Reordering needs all records on one page.'
+                    : 'Clear search and filters to reorder.'}
+              </ReorderHint>
+            )
+          ) : null}
+          {reorderBusy ? <UI.ToneBadge $tone="info">Saving order…</UI.ToneBadge> : null}
         </UI.Toolbar>
 
         {listQuery.isLoading ? (
@@ -544,10 +957,13 @@ export function ResourceManager({
             ) : null}
           </UI.StateBox>
         ) : (
-          <UI.TableWrap $min={columns.length > 6 ? '980px' : '760px'}>
+          <ReorderTableWrap $min={(columns.length + (reorderEnabled ? 1 : 0)) > 6 ? '980px' : '760px'}>
             <table>
               <thead>
                 <tr>
+                  {reorderEnabled ? (
+                    <th style={{ width: 44 }} aria-label="Reorder" />
+                  ) : null}
                   {columns.map((column) => (
                     <th key={column.key} style={column.width ? { width: column.width } : undefined}>
                       {column.label}
@@ -557,8 +973,31 @@ export function ResourceManager({
                 </tr>
               </thead>
               <tbody>
-                {items.map((row) => (
-                  <tr key={row.id}>
+                {displayItems.map((row) => (
+                  <tr
+                    key={row.id}
+                    data-reorder-row={reorderEnabled ? '' : undefined}
+                    className={row.id === draggingId ? 'is-dragging' : undefined}
+                    ref={(element) => {
+                      if (!reorderEnabled) return;
+                      if (element) rowRefs.current.set(row.id, element);
+                      else rowRefs.current.delete(row.id);
+                    }}
+                  >
+                    {reorderEnabled ? (
+                      <td>
+                        <DragHandle
+                          type="button"
+                          title="Drag to reorder"
+                          aria-label={`Move ${reorderLabel(row)} up or down`}
+                          disabled={!reorderAllowed || reorderBusy}
+                          onPointerDown={(event) => startDrag(event, row)}
+                          onKeyDown={(event) => handleKeyReorder(event, row)}
+                        >
+                          <GripVertical size={15} />
+                        </DragHandle>
+                      </td>
+                    ) : null}
                     {columns.map((column) => (
                       <td key={column.key} className={column.align === 'right' ? 'numeric' : undefined}>
                         {renderCell(row, column)}
@@ -590,7 +1029,7 @@ export function ResourceManager({
                 ))}
               </tbody>
             </table>
-          </UI.TableWrap>
+          </ReorderTableWrap>
         )}
 
         {pagination.total > 0 ? (

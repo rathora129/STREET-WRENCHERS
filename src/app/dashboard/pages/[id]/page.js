@@ -130,12 +130,17 @@ export default function PageSectionsPage() {
         helpTopic="pages"
         eyebrow="CMS · Page content"
         title={`Sections · ${page.title}`}
-        description="Sections are rendered in sort order. The section key is the stable identifier used by the page layout, so change it only when you know the template expects a new key."
+        description="Sections are rendered in sort order. Drag the handle on the left to rearrange them — the website updates as soon as the new order saves. The section key is the stable identifier used by the page layout, so change it only when you know the template expects a new key."
         createLabel="New section"
         searchPlaceholder="Search sections…"
         modalWide
         fixedFilters={{ pageId: id }}
         payloadDefaults={{ pageId: id }}
+        reorder={{
+          endpoint: '/api/admin/sections/reorder',
+          scope: { pageId: id },
+          getLabel: (row) => row.key || row.heading || 'Section',
+        }}
         columns={[
           { key: 'key', label: 'Section', render: (row) => <MainCell primary={row.key} sub={row.type} /> },
           { key: 'heading', label: 'Heading' },

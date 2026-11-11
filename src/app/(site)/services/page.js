@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import { getPublishedPage, getServicesWithCategories, getPublishedPackages } from '@/services/content';
 import { pageMetadata, breadcrumbSchema, JsonLd } from '@/lib/seo';
@@ -24,20 +25,13 @@ export default async function ServicesPage() {
 
   if (!page) notFound();
 
-  const hero = page.sections?.find((section) => section.type === 'PAGE_HERO');
-  const cta = page.sections?.find((section) => section.type === 'CTA');
+  const orderedSections = page.sections || [];
+  const hero = orderedSections.find((section) => section.type === 'PAGE_HERO');
+  const cta = orderedSections.find((section) => section.type === 'CTA');
 
-  return (
+  const listing = (
     <>
-      <PageHero
-        eyebrow={hero?.eyebrow || 'Services'}
-        heading={hero?.heading || 'Service, diagnostics and detailing for every make.'}
-        subheading={hero?.subheading}
-        image={hero?.image || '/assets/images/gallery/workshop-lift.jpg'}
-        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Services', href: '/services' }]}
-      />
-
-      <Section $tone="coal" $compact>
+      <Section key="category-strip" $tone="coal" $compact>
         <Container>
           {categories.length ? (
             <CategoryStrip categories={categories} />
@@ -102,15 +96,45 @@ export default async function ServicesPage() {
           </Container>
         </Section>
       ) : null}
+    </>
+  );
 
-      <CtaBand
-        heading={cta?.heading || 'Not sure which service you need?'}
-        subheading={cta?.subheading}
-        ctaLabel={cta?.ctaLabel || 'Talk to the workshop'}
-        ctaHref={cta?.ctaHref || '/contact'}
-        secondaryLabel="Book a service"
-        secondaryHref="/book"
-      />
+  const heroBlock = (
+    <PageHero
+      key="hero"
+      eyebrow={hero?.eyebrow || 'Services'}
+      heading={hero?.heading || 'Service, diagnostics and detailing for every make.'}
+      subheading={hero?.subheading}
+      image={hero?.image || '/assets/images/gallery/workshop-lift.jpg'}
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Services', href: '/services' }]}
+    />
+  );
+
+  const ctaBlock = (
+    <CtaBand
+      key="cta"
+      heading={cta?.heading || 'Not sure which service you need?'}
+      subheading={cta?.subheading}
+      ctaLabel={cta?.ctaLabel || 'Talk to the workshop'}
+      ctaHref={cta?.ctaHref || '/contact'}
+      secondaryLabel="Book a service"
+      secondaryHref="/book"
+    />
+  );
+
+  const rendered = [];
+  for (const section of orderedSections) {
+    if (section.type === 'PAGE_HERO') {
+      rendered.push(heroBlock, <Fragment key="listing">{listing}</Fragment>);
+    } else if (section.type === 'CTA') {
+      rendered.push(ctaBlock);
+    }
+  }
+  if (!hero) rendered.unshift(<Fragment key="listing">{listing}</Fragment>);
+
+  return (
+    <>
+      {rendered}
 
       <JsonLd
         data={breadcrumbSchema([
