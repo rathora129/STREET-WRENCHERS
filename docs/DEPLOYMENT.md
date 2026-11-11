@@ -40,7 +40,18 @@ Append `?sslmode=require` when your provider requires TLS. Keep both strings out
 
 Only variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. Never prefix a secret.
 
-`DIRECT_URL` is optional. When set, the deployment bootstrap uses it for `prisma migrate deploy` and the seed, which avoids transaction-pooling limitations on providers such as Neon and Supabase. When it is absent, the bootstrap falls back to `DATABASE_URL`.
+`DIRECT_URL` is optional. When set, the deployment bootstrap uses it for `prisma migrate deploy` and the seed, which avoids transaction-pooling limitations on providers such as Neon and Supabase. When it is absent, the bootstrap falls back to `DATABASE_URL` and prints a warning if the runtime URL looks pooled.
+
+### Connection limits (required for serverless)
+
+Every Vercel function instance creates its own Prisma pool. Without a cap, a traffic burst opens more connections than the PostgreSQL role allows (`P2037: too many connections for role`).
+
+- Set `DATABASE_URL` to the provider's **pooled** endpoint (Neon `-pooler`, Supabase port `6543`, PgBouncer port `6432`). This is detected automatically.
+- The app appends `connection_limit=1` and `pool_timeout=10` at runtime when the URL does not set them, and adds `pgbouncer=true` for pooled hosts (transaction mode must not use named prepared statements).
+- Optional overrides: `PRISMA_CONNECTION_LIMIT` and `PRISMA_POOL_TIMEOUT` (positive integers). Keep `connection_limit` small (1–3) for serverless.
+- `DIRECT_URL` is used only by build-time migrations and seeding — never by the running app.
+
+Check the effective mode in function logs at startup: `[prisma] runtime pool: mode=pooled connection_limit=1`.
 
 ## 3. Apply migrations
 

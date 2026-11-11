@@ -61,9 +61,11 @@ export const getCurrentOwner = cache(async () => {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  const session = await prisma.session
-    .findUnique({ where: { tokenHash: hashToken(token) }, include: { owner: true } })
-    .catch(() => null);
+  // Connection failures must surface as 503, not as a silent logout / 401.
+  const session = await prisma.session.findUnique({
+    where: { tokenHash: hashToken(token) },
+    include: { owner: true },
+  });
 
   if (!session || session.revokedAt || session.expiresAt < new Date()) return null;
 

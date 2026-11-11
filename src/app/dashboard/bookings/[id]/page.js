@@ -330,7 +330,7 @@ function BookingDetail() {
       return body.data;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(['admin-booking', id], data);
+      queryClient.setQueryData(['admin-booking', id], (current) => ({ ...current, ...data }));
       queryClient.invalidateQueries({ queryKey: ['admin', 'bookings'] });
       queryClient.invalidateQueries({ queryKey: ['overview'] });
       setError('');
@@ -484,6 +484,8 @@ function BookingDetail() {
     trackingMutation.mutate(action);
   };
 
+  const phoneDigits = waNumber(booking.phone);
+
   const shareMessage = trackingUrl && phoneDigits
     ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(
         `Hello ${booking.customerName}, you can follow your vehicle service (${booking.reference}) here: ${trackingUrl}`,
@@ -493,7 +495,6 @@ function BookingDetail() {
   const events = Array.isArray(booking.stageEvents) ? booking.stageEvents : [];
 
   const utm = booking.utm && typeof booking.utm === 'object' ? Object.entries(booking.utm).filter(([, value]) => value) : [];
-  const phoneDigits = waNumber(booking.phone);
 
   return (
     <>

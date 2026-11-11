@@ -1,6 +1,6 @@
 import { cache } from 'react';
 import { z } from 'zod';
-import { prisma } from './prisma';
+import { prisma, isDatabaseUnavailable } from './prisma';
 import { MODULE_KEYS } from '@/data/modules';
 import { DEFAULT_SETTINGS } from '@/data/settings-defaults';
 
@@ -108,6 +108,7 @@ export const getSettings = cache(async () => {
     const rows = await prisma.setting.findMany();
     stored = Object.fromEntries(rows.map((row) => [row.key, row.value]));
   } catch (error) {
+    if (isDatabaseUnavailable(error)) throw error;
     console.error('[settings] unable to read database settings', error.message);
   }
 

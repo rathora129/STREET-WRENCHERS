@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
+import { DatabaseUnavailableError, isDatabaseUnavailable } from './prisma';
 import { getCurrentOwner } from './auth';
 
 export class ApiError extends Error {
@@ -23,8 +24,17 @@ export function noContent() {
   return new NextResponse(null, { status: 204 });
 }
 
-export function fail(message, status = 400, details) {
-  return NextResponse.json({ ok: false, error: message, details }, { status });
+export function fail(message, status = 400, details, init) {
+  return NextResponse.json({ ok: false, error: message, details }, { status, ...init });
+}
+
+export function databaseUnavailable() {
+  return fail(
+    'The database is temporarily unavailable. Please try again in a moment.',
+    503,
+    undefined,
+    { headers: { 'Retry-After': '5', 'Cache-Control': 'no-store' } },
+  );
 }
 
 export function tooManyRequests(retryAfter) {
@@ -124,6 +134,10 @@ export function route(handler) {
         }
         if (error.code === 'P2025') return fail('Record not found', 404);
         if (error.code === 'P2003') return fail('Related record not found', 409);
+      }
+      if (error instanceof DatabaseUnavailableError || isDatabaseUnavailable(error)) {
+        console.error('[api] database unavailable', error.name, error.code || '');
+        return databaseUnavailable();
       }
       console.error('[api]', error);
       return fail('Something went wrong. Please try again.', 500);

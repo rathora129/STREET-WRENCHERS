@@ -68,6 +68,22 @@ if (!databaseUrl) {
   fail('DATABASE_URL is not configured. Set it (and optionally DIRECT_URL) before deploying.');
 }
 
+const pooledPattern = /(^|[.-])pooler[.-]|pgbouncer|proxy/i;
+const pooledPorts = new Set(['6432', '6543']);
+function looksPooled(value) {
+  try {
+    const parsed = new URL(value);
+    return pooledPattern.test(parsed.hostname) || pooledPorts.has(parsed.port);
+  } catch {
+    return false;
+  }
+}
+
+if (!usingDirectUrl && looksPooled(process.env.DATABASE_URL || '')) {
+  log('WARNING: DATABASE_URL looks like a pooled endpoint and DIRECT_URL is not set.');
+  log('Migrations need a direct connection — set DIRECT_URL to the non-pooled string.');
+}
+
 let hostname = '';
 try {
   hostname = new URL(databaseUrl).hostname.toLowerCase();
