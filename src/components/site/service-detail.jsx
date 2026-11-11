@@ -6,6 +6,7 @@ import { media } from '@/styles/theme';
 import { Section, Container, Grid, Panel } from '@/components/ui/layout';
 import { Eyebrow, Heading, Intro, Prose, SectionHead } from '@/components/ui/type';
 import { Badge } from '@/components/ui/badge';
+import { CategoryIcon } from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Reveal } from '@/components/ui/reveal';
 import { Accordion } from '@/components/ui/accordion';
@@ -228,7 +229,25 @@ export function ServiceDetail({ service, related, whatsappUrl }) {
 
             <Side>
               <Panel $pad="clamp(20px, 2.6vw, 28px)" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <Badge $tone="brand">{service.category?.name || 'Workshop service'}</Badge>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <Badge $tone="brand">{service.category?.name || 'Workshop service'}</Badge>
+                  <span
+                    style={{
+                      width: 40,
+                      height: 40,
+                      flex: 'none',
+                      display: 'grid',
+                      placeItems: 'center',
+                      borderRadius: 8,
+                      background: 'rgba(242,106,13,0.12)',
+                      border: '1px solid rgba(242,106,13,0.28)',
+                      color: '#f26a0d',
+                    }}
+                    aria-hidden="true"
+                  >
+                    <CategoryIcon name={service.icon || service.category?.icon} size={19} />
+                  </span>
+                </div>
                 <PriceBox>
                   <span className="label">{service.price ? 'Starting from' : 'Pricing'}</span>
                   <strong>{service.price ? `AED ${service.price}` : 'Quoted'}</strong>

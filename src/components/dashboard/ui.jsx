@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { X } from 'lucide-react';
 import { media } from '@/styles/theme';
 
@@ -47,7 +47,7 @@ export const HeadActions = styled.div`
   flex-wrap: wrap;
 `;
 
-const buttonBase = `
+const buttonBase = css`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -77,7 +77,7 @@ export const DashButton = styled.button`
           : theme.colors.surface};
   color: ${({ $variant, theme }) =>
     $variant === 'primary'
-      ? '#0b0b0d'
+      ? '#ffffff'
       : $variant === 'danger'
         ? '#ff9a9d'
         : $variant === 'ghost'
@@ -90,7 +90,7 @@ export const DashButton = styled.button`
         ? 'transparent'
         : $variant === 'primary'
           ? theme.colors.brand
-          : theme.colors.line};
+          : theme.colors.lineStrong};
 
   &:hover:not(:disabled) {
     background: ${({ $variant, theme }) =>
@@ -102,6 +102,11 @@ export const DashButton = styled.button`
             ? theme.colors.surface
             : theme.colors.surfaceRaised};
     color: ${({ $variant, theme }) => ($variant === 'ghost' ? theme.colors.white : undefined)};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brand};
+    outline-offset: 2px;
   }
 `;
 
@@ -138,8 +143,8 @@ export const StatsGrid = styled.div`
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 
-  ${media.lg} {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  ${media.md} {
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
   }
 `;
 
@@ -147,10 +152,16 @@ export const StatCard = styled.div`
   padding: 16px;
   border: 1px solid ${({ theme }) => theme.colors.line};
   border-radius: ${({ theme }) => theme.radii.sm};
-  background: ${({ theme }) => theme.colors.charcoal};
+  background: ${({ theme }) => theme.colors.surface};
   display: flex;
   flex-direction: column;
   gap: 7px;
+  transition: border-color 180ms ease, background 180ms ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.lineStrong};
+    background: ${({ theme }) => theme.colors.surfaceRaised};
+  }
 
   .top {
     display: flex;
@@ -225,6 +236,7 @@ export const SearchWrap = styled.div`
 
     &::placeholder { color: ${({ theme }) => theme.colors.dim}; }
     &:focus { outline: none; border-color: ${({ theme }) => theme.colors.brand}; }
+    &:focus-visible { outline: 2px solid ${({ theme }) => theme.colors.brand}; outline-offset: 1px; }
   }
 `;
 
@@ -245,6 +257,7 @@ export const FilterSelect = styled.select`
 
   option { background: #101014; }
   &:focus { outline: none; border-color: ${({ theme }) => theme.colors.brand}; }
+  &:focus-visible { outline: 2px solid ${({ theme }) => theme.colors.brand}; outline-offset: 1px; }
 `;
 
 export const TableWrap = styled.div`
@@ -411,7 +424,7 @@ export const StateBox = styled.div`
   color: ${({ theme }) => theme.colors.muted};
 
   h3 { font-size: 16px; color: ${({ theme }) => theme.colors.white}; }
-  p { font-size: 12.5px; max-width: 42ch; line-height: 1.7; }
+  p { font-size: 12.5px; max-width: 42ch; line-height: 1.7; color: ${({ theme }) => theme.colors.smoke}; }
   svg { color: ${({ theme }) => theme.colors.dim}; }
 `;
 
@@ -449,10 +462,10 @@ export const ModalBackdrop = styled.div`
 export const ModalCard = styled.div`
   width: 100%;
   max-width: ${({ $wide }) => ($wide ? '980px' : '760px')};
-  background: ${({ theme }) => theme.colors.charcoal};
+  background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.lineStrong};
   border-radius: ${({ theme }) => theme.radii.md};
-  box-shadow: ${({ theme }) => theme.shadows.lift};
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.65);
   overflow: hidden;
 `;
 
@@ -463,6 +476,7 @@ export const ModalHead = styled.header`
   gap: 16px;
   padding: 16px 20px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.line};
+  background: ${({ theme }) => theme.colors.charcoal};
 
   h2 {
     font-family: ${({ theme }) => theme.fonts.display};
@@ -544,8 +558,9 @@ const control = `
   font-size: 12.5px;
   line-height: 1.5;
 
-  &::placeholder { color: #5f5d58; }
+  &::placeholder { color: #8a867f; }
   &:focus { outline: none; border-color: #f26a0d; }
+  &:focus-visible { outline: 2px solid #f26a0d; outline-offset: 1px; }
   &:disabled { opacity: 0.6; }
 `;
 

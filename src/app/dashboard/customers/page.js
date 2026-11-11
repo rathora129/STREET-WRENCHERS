@@ -7,6 +7,7 @@ export default function CustomersPage() {
   return (
     <ResourceManager
       resource="customers"
+      helpTopic="customers"
       eyebrow="Operations"
       title="Customers"
       description="Everyone who has booked a service or submitted an enquiry. Phone number is the unique customer identifier."

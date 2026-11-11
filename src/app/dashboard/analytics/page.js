@@ -23,6 +23,7 @@ import {
   ToneBadge,
   formatDateCell,
 } from '@/components/dashboard/ui';
+import { HelpTip } from '@/components/dashboard/help';
 
 const RangeRow = styled.div`
   display: flex;
@@ -133,6 +134,7 @@ export default function AnalyticsPage() {
           </p>
         </HeadText>
         <HeadActions>
+          <HelpTip topicId="dashboard" />
           <RangeRow>
             {RANGES.map((range) => (
               <DashButton
@@ -216,7 +218,7 @@ export default function AnalyticsPage() {
             <Panel>
               <PanelHead>
                 <h2>Top pages</h2>
-                <span style={{ fontSize: 10.5, color: '#66645f' }}>By page views</span>
+                <span style={{ fontSize: 10.5, color: '#8a867f' }}>By page views</span>
               </PanelHead>
               {data.topPages.length ? (
                 <List>
@@ -312,7 +314,7 @@ export default function AnalyticsPage() {
                       </li>
                     ))}
                   </List>
-                ) : <p style={{ fontSize: 11.5, color: '#66645f', marginBottom: 16 }}>No bookings in this period.</p>}
+                ) : <p style={{ fontSize: 11.5, color: '#8a867f', marginBottom: 16 }}>No bookings in this period.</p>}
 
                 <h3 style={{ fontSize: 12, marginBottom: 8 }}>Leads</h3>
                 {Object.keys(data.leadStatuses).length ? (
@@ -324,7 +326,7 @@ export default function AnalyticsPage() {
                       </li>
                     ))}
                   </List>
-                ) : <p style={{ fontSize: 11.5, color: '#66645f' }}>No leads in this period.</p>}
+                ) : <p style={{ fontSize: 11.5, color: '#8a867f' }}>No leads in this period.</p>}
               </PanelBody>
             </Panel>
           </Split>

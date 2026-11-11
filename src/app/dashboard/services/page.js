@@ -2,11 +2,13 @@
 
 import { ResourceManager } from '@/components/dashboard/resource-manager';
 import { MainCell, StatusBadge, YesNo } from '@/components/dashboard/cells';
+import { CategoryIcon } from '@/components/ui/icon';
 
 export default function ServicesPage() {
   return (
     <ResourceManager
       resource="services"
+      helpTopic="services"
       eyebrow="Catalogue"
       title="Services"
       description="Every service on the website. Prices are shown as reference prices, so use the price note to explain what is included or when a quote is required."
@@ -15,6 +17,7 @@ export default function ServicesPage() {
       modalWide
       columns={[
         { key: 'name', label: 'Service', render: (row) => <MainCell primary={row.name} sub={row.category?.name} /> },
+        { key: 'icon', label: 'Icon', render: (row) => <CategoryIcon name={row.icon || row.category?.icon} size={17} /> },
         { key: 'price', label: 'Price', type: 'price', align: 'right' },
         { key: 'duration', label: 'Duration' },
         { key: 'isFeatured', label: 'Featured', render: (row) => <YesNo value={row.isFeatured} yes="Featured" no="Standard" /> },
@@ -49,6 +52,7 @@ export default function ServicesPage() {
         { name: 'price', label: 'Reference price (AED)', type: 'number', placeholder: 'Leave blank for quote only' },
         { name: 'priceNote', label: 'Price note', placeholder: 'e.g. From, depending on vehicle' },
         { name: 'duration', label: 'Duration', placeholder: 'e.g. 2–3 hours' },
+        { name: 'icon', label: 'Service icon', type: 'icon', span: 2, help: 'Search the icon library and pick the symbol shown on service cards. Changes apply across the website without code.' },
         { name: 'image', label: 'Main image', type: 'image', folder: 'services' },
         { name: 'gallery', label: 'Gallery image URLs', type: 'tags', span: 2, help: 'Comma-separated URLs. Upload each image first from the Media Library.' },
         { name: 'inclusions', label: 'What is included', type: 'tags', span: 2, help: 'Comma-separated list items.' },

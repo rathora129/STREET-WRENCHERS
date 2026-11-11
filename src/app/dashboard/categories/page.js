@@ -7,6 +7,7 @@ export default function CategoriesPage() {
   return (
     <ResourceManager
       resource="categories"
+      helpTopic="services"
       eyebrow="Catalogue"
       title="Service categories"
       description="Group services on the website. Categories with no published services are hidden from the public services page."

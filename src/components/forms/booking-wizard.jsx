@@ -317,6 +317,7 @@ const vehicleSchema = Yup.object({
     .max(new Date().getFullYear() + 1, 'Enter a valid year')
     .required('Choose a year'),
   fuelType: Yup.string().required('Choose a fuel type'),
+  registrationNumber: Yup.string().trim().max(40),
 });
 
 const serviceSchema = Yup.object({
@@ -437,6 +438,7 @@ export function BookingWizard({ brands = [], services = [], bookingSettings = {}
         modelName: values.modelName,
         year: Number(values.year),
         fuelType: values.fuelType,
+        registrationNumber: values.registrationNumber?.trim() || undefined,
         serviceId: values.serviceId,
         packageId: values.packageId || undefined,
         date: values.date,
@@ -501,6 +503,20 @@ export function BookingWizard({ brands = [], services = [], bookingSettings = {}
           <span>Requested</span>
           <span>{formatDate(store.date)} at {store.time}</span>
         </SummaryRow>
+        {confirmation.trackingUrl ? (
+          <>
+            <SummaryRow style={{ width: '100%' }}>
+              <span>Tracking</span>
+              <a href={confirmation.trackingUrl} style={{ color: '#f26a0d', fontWeight: 600 }}>
+                Open your tracking page
+              </a>
+            </SummaryRow>
+            <p style={{ fontSize: 12, lineHeight: 1.7, color: '#96938d', margin: 0 }}>
+              Keep this private link. It shows your vehicle&apos;s progress and workshop updates without a login.
+              Do not share it publicly.
+            </p>
+          </>
+        ) : null}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
           <Button
             variant="outline"
@@ -548,6 +564,7 @@ export function BookingWizard({ brands = [], services = [], bookingSettings = {}
               modelName: store.modelName,
               year: store.year,
               fuelType: store.fuelType,
+              registrationNumber: store.registrationNumber || '',
             }}
             validationSchema={vehicleSchema}
             enableReinitialize
@@ -621,6 +638,17 @@ export function BookingWizard({ brands = [], services = [], bookingSettings = {}
                         {fieldError(touched, errors, 'fuelType')}
                       </Field>
                     </div>
+
+                    <Field>
+                      <LabelText>Registration number (optional)</LabelText>
+                      <FormikField
+                        as={Input}
+                        name="registrationNumber"
+                        placeholder="e.g. A 12345"
+                        autoComplete="off"
+                      />
+                      {fieldError(touched, errors, 'registrationNumber')}
+                    </Field>
                   </div>
 
                   <Actions>
@@ -776,7 +804,7 @@ export function BookingWizard({ brands = [], services = [], bookingSettings = {}
                         <span>I would like pickup and drop-off</span>
                       </CheckRow>
                       {bookingSettings.pickupNote ? (
-                        <span style={{ fontSize: 11.5, color: '#66645f', marginTop: -8 }}>{bookingSettings.pickupNote}</span>
+                        <span style={{ fontSize: 11.5, color: '#8a867f', marginTop: -8 }}>{bookingSettings.pickupNote}</span>
                       ) : null}
                       {values.pickupRequired ? (
                         <Field>

@@ -127,6 +127,7 @@ export default function PageSectionsPage() {
 
       <ResourceManager
         resource="sections"
+        helpTopic="pages"
         eyebrow="CMS · Page content"
         title={`Sections · ${page.title}`}
         description="Sections are rendered in sort order. The section key is the stable identifier used by the page layout, so change it only when you know the template expects a new key."

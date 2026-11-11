@@ -7,6 +7,7 @@ export default function RedirectsPage() {
   return (
     <ResourceManager
       resource="redirects"
+      helpTopic="seo"
       eyebrow="System · SEO"
       title="Redirects"
       description="Database-backed redirects applied without a redeploy. Permanent rules (301/308) are served as a permanent 308 response, temporary rules (302/307) as a temporary 307 response — search engines treat these exactly like their 301/302 equivalents."

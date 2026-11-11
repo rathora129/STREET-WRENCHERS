@@ -167,7 +167,7 @@ export function SettingsForm({ group, title, description, fields, renderExtra })
             <DashButton type="submit" $variant="primary" $small disabled={mutation.isPending}>
               <Check size={14} /> {mutation.isPending ? 'Saving…' : 'Save settings'}
             </DashButton>
-            <span style={{ fontSize: 11, color: '#66645f' }}>Saved to the database.</span>
+            <span style={{ fontSize: 11, color: '#8a867f' }}>Saved to the database.</span>
           </div>
         </form>
 

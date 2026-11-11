@@ -40,6 +40,8 @@ import {
 import { media } from '@/styles/theme';
 import { LOGO_SRC } from '@/lib/site';
 import { initials } from '@/lib/utils';
+import { GUIDE_STORAGE_KEY } from '@/lib/dashboard-guide';
+import { GuidedTour } from './help';
 
 const SIDEBAR = 268;
 
@@ -355,6 +357,7 @@ const NAV_GROUPS = [
       { label: 'Business Settings', href: '/dashboard/settings', icon: Settings },
       { label: 'Security & Sessions', href: '/dashboard/security', icon: KeyRound },
       { label: 'Redirects', href: '/dashboard/redirects', icon: Route },
+      { label: 'Help Centre', href: '/dashboard/help', icon: HelpCircle },
     ],
   },
 ];
@@ -377,10 +380,22 @@ export function DashboardShell({ owner, children }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    try {
+      if (!window.localStorage.getItem(GUIDE_STORAGE_KEY)) setTourOpen(true);
+    } catch {
+      /* storage can be unavailable in private modes */
+    }
+    const startTour = () => setTourOpen(true);
+    window.addEventListener('sw:start-tour', startTour);
+    return () => window.removeEventListener('sw:start-tour', startTour);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
@@ -456,6 +471,9 @@ export function DashboardShell({ owner, children }) {
             ) : null}
           </Breadcrumb>
           <TopSpacer />
+          <IconButton as={Link} href="/dashboard/help" aria-label="Open help centre" title="Help centre">
+            <HelpCircle size={17} />
+          </IconButton>
           <Owner>
             <Avatar>{initials(owner.name || owner.email)}</Avatar>
             <small>
@@ -471,6 +489,8 @@ export function DashboardShell({ owner, children }) {
 
         <Main id="dashboard-main">{children}</Main>
       </Body>
+
+      <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />
     </Shell>
   );
 }

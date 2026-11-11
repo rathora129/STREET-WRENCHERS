@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageHero } from '@/components/site/page-hero';
 import { CtaBand } from '@/components/site/cta-band';
+import { BrandTile } from '@/components/site/cards';
 
 const Toolbar = styled.div`
   display: flex;
@@ -38,59 +39,15 @@ const SearchWrap = styled.div`
 
 const Grid = styled.div`
   display: grid;
-  gap: 12px;
+  gap: 16px;
   grid-template-columns: 1fr;
 
-  ${media.md} {
+  ${media.sm} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   ${media.lg} {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-`;
-
-const Card = styled.div`
-  padding: 20px;
-  border: 1px solid ${({ theme }) => theme.colors.line};
-  border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.charcoal};
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  h3 {
-    font-family: ${({ theme }) => theme.fonts.display};
-    font-size: 18px;
-    letter-spacing: -0.01em;
-  }
-
-  header span {
-    font-size: 10.5px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: ${({ theme }) => theme.colors.dim};
-  }
-`;
-
-const Models = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-
-  span {
-    font-size: 11px;
-    color: ${({ theme }) => theme.colors.muted};
-    border: 1px solid ${({ theme }) => theme.colors.line};
-    border-radius: ${({ theme }) => theme.radii.pill};
-    padding: 4px 8px;
   }
 `;
 
@@ -144,17 +101,7 @@ export function BrandDirectory({ page, brands = [] }) {
           {filtered.length ? (
             <Grid>
               {filtered.map((brand) => (
-                <Card key={brand.id || brand.name}>
-                  <header>
-                    <h3>{brand.name}</h3>
-                    <span>{brand.models?.length || 0} models</span>
-                  </header>
-                  <Models>
-                    {(brand.models || []).map((model) => (
-                      <span key={model.id || model.name}>{model.name}</span>
-                    ))}
-                  </Models>
-                </Card>
+                <BrandTile key={brand.id || brand.name} brand={brand} />
               ))}
             </Grid>
           ) : (

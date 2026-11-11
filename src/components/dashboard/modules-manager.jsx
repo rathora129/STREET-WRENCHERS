@@ -22,6 +22,7 @@ import {
   TextControl,
   ToneBadge,
 } from './ui';
+import { HelpTip } from './help';
 
 const Grid = styled.div`
   display: grid;
@@ -139,6 +140,7 @@ export function ModulesManager() {
           </p>
         </HeadText>
         <HeadActions>
+          <HelpTip topicId="modules" />
           <DashButton
             $variant="primary"
             $small

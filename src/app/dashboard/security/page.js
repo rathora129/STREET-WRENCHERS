@@ -228,7 +228,7 @@ export default function SecurityPage() {
                 <DashButton $variant="primary" $small type="submit" disabled={passwordMutation.isPending}>
                   <Lock size={14} /> {passwordMutation.isPending ? 'Updating…' : 'Update password'}
                 </DashButton>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#66645f' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#8a867f' }}>
                   <ShieldCheck size={12} /> Hashed with scrypt. Never stored in plain text.
                 </span>
               </div>

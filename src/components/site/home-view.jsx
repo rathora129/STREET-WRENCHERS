@@ -13,8 +13,10 @@ import { Reveal } from '@/components/ui/reveal';
 import { Accordion } from '@/components/ui/accordion';
 import { SmartImage } from '@/components/ui/smart-image';
 import { HeroSlider } from '@/components/site/hero-slider';
-import { ServiceCard, PackageCard, AmcCard, BrandTile, BlogCard, TestimonialCard } from '@/components/site/cards';
+import { TestimonialMarquee } from '@/components/site/testimonial-marquee';
+import { ServiceCard, PackageCard, AmcCard, BrandTile, BlogCard } from '@/components/site/cards';
 import { GalleryGrid } from '@/components/site/gallery-grid';
+import { Carousel } from '@/components/ui/carousel';
 import { ModulePromo } from '@/components/site/module-promo';
 import { ContactSection } from '@/components/site/contact-section';
 
@@ -240,7 +242,7 @@ export function HomeView({ data }) {
 
   return (
     <>
-      <HeroSlider banners={banners} section={hero} />
+      <HeroSlider banners={banners} section={hero} options={settings.banner} />
 
       <Section $tone="coal" $compact>
         <Container>
@@ -377,11 +379,13 @@ export function HomeView({ data }) {
               </Button>
             }
           />
-          <Grid $cols={2} $md={3} $lg={4} $gap="10px">
-            {brands.map((brand) => (
-              <BrandTile key={brand.id} brand={brand} />
-            ))}
-          </Grid>
+          <Carousel
+            label="Car brands"
+            items={brands}
+            itemWidth="clamp(196px, 27vw, 286px)"
+            gap="10px"
+            renderItem={(brand) => <BrandTile brand={brand} />}
+          />
         </Container>
       </Section>
 
@@ -440,7 +444,7 @@ export function HomeView({ data }) {
               }
             />
             <GalleryWrap>
-              <GalleryGrid items={media.slice(0, 6)} columns={2} largeColumns={3} />
+              <GalleryGrid layout="carousel" items={media.slice(0, 8)} />
             </GalleryWrap>
           </Container>
         </Section>
@@ -454,13 +458,7 @@ export function HomeView({ data }) {
             intro={testimonialsSection.subheading}
           />
           {testimonials.length ? (
-            <Grid $cols={1} $md={2} $lg={3}>
-              {testimonials.map((testimonial) => (
-                <Reveal key={testimonial.id}>
-                  <TestimonialCard testimonial={testimonial} />
-                </Reveal>
-              ))}
-            </Grid>
+            <TestimonialMarquee items={testimonials} />
           ) : (
             <EmptyState
               title="Verified reviews only"

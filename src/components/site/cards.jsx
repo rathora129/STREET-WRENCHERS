@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, Check, Star } from 'lucide-react';
 import { media } from '@/styles/theme';
 import { CategoryIcon } from '@/components/ui/icon';
@@ -115,7 +117,7 @@ export function ServiceCard({ service }) {
     <CardLink href={`/services/${service.slug}`} aria-label={`${service.name} details`}>
       <CardTop>
         <IconWrap>
-          <CategoryIcon name={service.category?.icon} size={20} />
+          <CategoryIcon name={service.icon || service.category?.icon} size={20} />
         </IconWrap>
         {service.category ? <Badge>{service.category.name}</Badge> : null}
       </CardTop>
@@ -301,7 +303,26 @@ const AmcList = styled.ul`
 export function AmcCard({ plan, featured = false }) {
   return (
     <AmcCardWrap href={`/amc/${plan.slug}`} $featured={featured}>
-      {featured ? <Badge $tone="brand">Most popular</Badge> : <Badge>Annual plan</Badge>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        {featured ? <Badge $tone="brand">Most popular</Badge> : <Badge>Annual plan</Badge>}
+        {plan.icon ? (
+          <span
+            style={{
+              width: 38,
+              height: 38,
+              flex: 'none',
+              display: 'grid',
+              placeItems: 'center',
+              borderRadius: 8,
+              background: 'rgba(242,106,13,0.12)',
+              color: '#f26a0d',
+              border: '1px solid rgba(242,106,13,0.28)',
+            }}
+          >
+            <CategoryIcon name={plan.icon} size={18} />
+          </span>
+        ) : null}
+      </div>
       <AmcName>{plan.name}</AmcName>
       <AmcPrice>
         {formatPrice(plan.price)}
@@ -328,41 +349,169 @@ export function AmcCard({ plan, featured = false }) {
   );
 }
 
-const BrandTileWrap = styled.div`
+const BrandCard = styled(Link)`
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 20px;
   border: 1px solid ${({ theme }) => theme.colors.line};
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.015);
-  transition: border-color 200ms ease, background 200ms ease;
+  border-radius: ${({ theme }) => theme.radii.md};
+  overflow: hidden;
+  background: ${({ theme }) => theme.colors.charcoal};
+  transition: transform 260ms ease, border-color 260ms ease, background 260ms ease;
 
-  &:hover {
-    border-color: rgba(242, 106, 13, 0.35);
-    background: rgba(242, 106, 13, 0.05);
+  ${media.hover} {
+    &:hover {
+      transform: translateY(-4px);
+      border-color: rgba(242, 106, 13, 0.45);
+      background: #16161b;
+
+      .brand-cover {
+        transform: scale(1.045);
+      }
+
+      .brand-arrow {
+        background: ${({ theme }) => theme.colors.brand};
+        color: #0b0b0d;
+        border-color: transparent;
+      }
+    }
   }
 
-  strong {
-    font-family: ${({ theme }) => theme.fonts.display};
-    font-size: 16px;
-    font-weight: 500;
-    color: ${({ theme }) => theme.colors.white};
-    letter-spacing: -0.01em;
-  }
-
-  span {
-    font-size: 11px;
-    color: ${({ theme }) => theme.colors.dim};
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.brand};
+    outline-offset: 3px;
   }
 `;
 
-export function BrandTile({ brand }) {
+const BrandMedia = styled.div`
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(242, 106, 13, 0.2), transparent 58%),
+    linear-gradient(140deg, #17171c 0%, #0b0b0d 100%);
+
+  .brand-cover {
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+`;
+
+const LogoPlate = styled.div`
+  width: min(56%, 150px);
+  aspect-ratio: 3 / 2;
+  border-radius: 10px;
+  background: #f4f1ea;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+`;
+
+const Monogram = styled.span`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: ${({ theme }) => theme.colors.white};
+  text-transform: uppercase;
+`;
+
+const BrandBody = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+
+  strong {
+    display: block;
+    font-family: ${({ theme }) => theme.fonts.display};
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: ${({ theme }) => theme.colors.white};
+  }
+
+  span {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    color: ${({ theme }) => theme.colors.muted};
+  }
+`;
+
+const BrandArrow = styled.span`
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid ${({ theme }) => theme.colors.lineStrong};
+  display: grid;
+  place-items: center;
+  color: ${({ theme }) => theme.colors.smoke};
+  transition: background 220ms ease, color 220ms ease, border-color 220ms ease;
+`;
+
+function brandInitials(name = '') {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('');
+}
+
+function BrandVisual({ brand }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const showImage = brand.image && !imageFailed;
+  const showLogo = brand.logo && !logoFailed;
+
   return (
-    <BrandTileWrap>
-      <strong>{brand.name}</strong>
-      <span>{brand._count?.models ?? brand.models?.length ?? 0} models covered</span>
-    </BrandTileWrap>
+    <BrandMedia>
+      {showImage ? (
+        <Image
+          src={brand.image}
+          alt={`${brand.name} vehicles serviced at Street Wrenchers`}
+          fill
+          sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
+          className="brand-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : showLogo ? (
+        <LogoPlate>
+          <img src={brand.logo} alt={`${brand.name} logo`} onError={() => setLogoFailed(true)} loading="lazy" />
+        </LogoPlate>
+      ) : (
+        <Monogram aria-hidden="true">{brandInitials(brand.name)}</Monogram>
+      )}
+    </BrandMedia>
+  );
+}
+
+export function BrandTile({ brand }) {
+  const modelCount = brand._count?.models ?? brand.models?.length ?? 0;
+  return (
+    <BrandCard href={`/brands/${brand.slug}`} aria-label={`${brand.name} — ${modelCount} models covered`}>
+      <BrandVisual brand={brand} />
+      <BrandBody>
+        <div>
+          <strong>{brand.name}</strong>
+          <span>{modelCount} {modelCount === 1 ? 'model' : 'models'} covered</span>
+        </div>
+        <BrandArrow className="brand-arrow">
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </BrandArrow>
+      </BrandBody>
+    </BrandCard>
   );
 }
 
@@ -465,7 +614,30 @@ const Person = styled.figcaption`
   }
 `;
 
+const PersonRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: auto;
+`;
+
+const Avatar = styled.span`
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid ${({ theme }) => theme.colors.line};
+  background: #17171c;
+
+  img { object-fit: cover; }
+`;
+
 export function TestimonialCard({ testimonial }) {
+  const reviewDate = testimonial.reviewedAt || testimonial.createdAt;
+  const meta = [testimonial.vehicle, reviewDate ? formatDate(reviewDate) : null].filter(Boolean).join(' · ');
+
   return (
     <TestimonialWrap>
       <Stars aria-label={`${testimonial.rating} out of 5`}>
@@ -474,10 +646,17 @@ export function TestimonialCard({ testimonial }) {
         ))}
       </Stars>
       <Quote>“{testimonial.quote}”</Quote>
-      <Person>
-        <strong>{testimonial.name}</strong>
-        {testimonial.vehicle ? <span>{testimonial.vehicle}</span> : null}
-      </Person>
+      <PersonRow>
+        {testimonial.image ? (
+          <Avatar>
+            <Image src={testimonial.image} alt="" fill sizes="38px" />
+          </Avatar>
+        ) : null}
+        <Person>
+          <strong>{testimonial.name}</strong>
+          {meta ? <span>{meta}</span> : null}
+        </Person>
+      </PersonRow>
     </TestimonialWrap>
   );
 }

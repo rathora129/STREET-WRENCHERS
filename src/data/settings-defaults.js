@@ -49,4 +49,32 @@ export const DEFAULT_SETTINGS = {
     pickupEnabled: true,
     pickupNote: 'Pickup and drop-off availability is confirmed by the team when your booking is accepted.',
   },
+  tracking: {
+    templatePickupScheduled:
+      'Hi {name}, your booking {reference} for {service} is scheduled for {date} at {time}. You can follow progress here: {trackingUrl}',
+    templateVehiclePickedUp:
+      'Hi {name}, we have collected your {vehicle} for booking {reference}. Follow progress here: {trackingUrl}',
+    templateReceivedAtWorkshop:
+      'Hi {name}, your {vehicle} has arrived at the workshop for booking {reference}. Follow progress here: {trackingUrl}',
+    templateInitialInspection:
+      'Hi {name}, the initial inspection has started on your {vehicle} for booking {reference}. Follow progress here: {trackingUrl}',
+    templateEstimateApproval:
+      'Hi {name}, an estimate is being prepared for booking {reference}. The team will contact you before any additional work is carried out. Follow progress here: {trackingUrl}',
+    templateServiceInProgress:
+      'Hi {name}, work is in progress on your {vehicle} for booking {reference}. Follow progress here: {trackingUrl}',
+    templateQualityInspection:
+      'Hi {name}, your {vehicle} is in quality inspection for booking {reference}. Follow progress here: {trackingUrl}',
+    templateReadyForDelivery:
+      'Hi {name}, your {vehicle} is ready for delivery for booking {reference}. Follow progress here: {trackingUrl}',
+    templateOutForDelivery:
+      'Hi {name}, your {vehicle} is out for delivery for booking {reference}. Follow progress here: {trackingUrl}',
+    templateDelivered:
+      'Hi {name}, booking {reference} is complete and your {vehicle} has been handed back. Thank you for choosing Street Wrenchers.',
+  },
+  banner: {
+    autoplay: true,
+    intervalSeconds: 7,
+    transition: 'fade',
+    transitionMs: 800,
+  },
 };

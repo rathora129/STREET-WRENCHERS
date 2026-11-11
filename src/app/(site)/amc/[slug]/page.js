@@ -17,6 +17,8 @@ export async function generateMetadata({ params }) {
       plan.metaDescription ||
       `${plan.name} annual maintenance plan in Dubai${plan.tagline ? ` — ${plan.tagline}` : ''}. Coverage and pricing confirmed at enquiry.`,
     path: `/amc/${plan.slug}`,
+    image: plan.ogImage || plan.image || '/assets/banners/og-default.jpg',
+    keywords: plan.keywords || [],
   });
 }
 

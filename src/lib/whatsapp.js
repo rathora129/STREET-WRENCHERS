@@ -8,3 +8,9 @@ export function whatsappLink(whatsapp, message) {
 export function buildWhatsappMessage(template, serviceName) {
   return String(template || '').replace('{service}', serviceName || 'your services');
 }
+
+export function clickToChatLink(phone, message) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message || '')}`;
+}

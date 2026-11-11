@@ -12,6 +12,7 @@ export default function LeadsPage() {
   return (
     <ResourceManager
       resource="leads"
+      helpTopic="leads"
       eyebrow="Operations · CRM"
       title="Leads & CRM"
       description="Central record of website enquiries and booking leads, including UTM attribution, status, follow-up and internal activity."

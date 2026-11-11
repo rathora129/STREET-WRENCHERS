@@ -357,7 +357,7 @@ function LeadDetail() {
     <>
       <BackBar>
         <Link href="/dashboard/leads"><ArrowLeft size={14} /> All leads</Link>
-        <span style={{ fontSize: 11.5, color: '#66645f' }}>Received {formatDateTimeCell(lead.createdAt)}</span>
+        <span style={{ fontSize: 11.5, color: '#8a867f' }}>Received {formatDateTimeCell(lead.createdAt)}</span>
       </BackBar>
 
       <PageHead>
@@ -446,7 +446,7 @@ function LeadDetail() {
             </Details>
 
             <div style={{ marginTop: 18 }}>
-              <p style={{ fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#66645f', marginBottom: 7 }}>
+              <p style={{ fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a867f', marginBottom: 7 }}>
                 Message
               </p>
               <p style={{ fontSize: 12.5, lineHeight: 1.75, color: '#cbc8c2', whiteSpace: 'pre-wrap' }}>
@@ -456,7 +456,7 @@ function LeadDetail() {
 
             {utm.length ? (
               <div style={{ marginTop: 18 }}>
-                <p style={{ fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#66645f', marginBottom: 8 }}>
+                <p style={{ fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8a867f', marginBottom: 8 }}>
                   UTM parameters
                 </p>
                 <Tags>

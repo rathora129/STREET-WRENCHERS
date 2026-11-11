@@ -14,6 +14,8 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import * as UI from './ui';
+import { IconPicker } from './icon-picker';
+import { HelpTip } from './help';
 import { formatPrice, toDateInputValue } from '@/lib/utils';
 
 const PageFlash = styled.div`
@@ -113,6 +115,7 @@ export function ResourceManager({
   emptyTitle = 'Nothing here yet',
   emptyBody = 'Records you add will appear in this list.',
   modalWide = false,
+  helpTopic = null,
 }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -382,6 +385,8 @@ export function ResourceManager({
             onChange={(event) => updateValue(field.name, event.target.value)}
             required={field.required}
           />
+        ) : field.type === 'icon' ? (
+          <IconPicker value={value} onChange={(next) => updateValue(field.name, next)} />
         ) : field.type === 'image' ? (
           <ImageField
             field={field}
@@ -450,6 +455,7 @@ export function ResourceManager({
           {description ? <p>{description}</p> : null}
         </UI.HeadText>
         <UI.HeadActions>
+          {helpTopic ? <HelpTip topicId={helpTopic} /> : null}
           {exportable ? (
             <UI.DashButton
               as="a"

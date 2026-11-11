@@ -23,9 +23,10 @@ export const GET = route(async (request, { params }) => {
   await requireOwner();
   const { resource, id } = await params;
   const config = resolveResource(resource);
+  const include = config.detailInclude || config.list.include;
   const item = await prisma[config.delegate].findUnique({
     where: { id },
-    ...(config.list.include ? { include: config.list.include } : {}),
+    ...(include ? { include } : {}),
   });
 
   if (!item) throw new ApiError(404, `${config.label} not found`);

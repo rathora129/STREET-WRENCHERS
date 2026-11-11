@@ -5,6 +5,11 @@ const requiredString = (max = 500, min = 1) => z.string().trim().min(min).max(ma
 const optionalString = (max = 2000) =>
   z.preprocess((value) => (value === '' || value === undefined ? null : value), z.string().trim().max(max).nullable().optional());
 
+const optionalEmail = z.preprocess(
+  (value) => (value === '' || value === null || value === undefined ? null : String(value).trim().toLowerCase()),
+  z.string().email('Enter a valid email address').max(200).nullable().optional(),
+);
+
 const nullableNumber = z.preprocess(
   (value) => {
     if (value === '' || value === null || value === undefined) return null;
@@ -26,7 +31,7 @@ const optionalStringList = z.preprocess(
 );
 
 const boolean = z.boolean();
-const sortOrder = z.coerce.number().int().min(-9999).max(9999);
+const sortOrder = z.coerce.number().int().min(-9999).max(9999).default(0);
 
 const seoFields = {
   metaTitle: optionalString(200),
@@ -59,6 +64,7 @@ export const serviceSchema = z.object({
   price: nullableNumber,
   priceNote: optionalString(200),
   duration: optionalString(80),
+  icon: optionalString(80),
   image: optionalString(600),
   gallery: stringList,
   inclusions: stringList,
@@ -97,6 +103,8 @@ export const amcPlanSchema = z.object({
   billingPeriod: requiredString(40).default('YEAR'),
   durationMonths: z.coerce.number().int().min(1).max(120),
   kmLimit: nullableNumber,
+  icon: optionalString(80),
+  image: optionalString(600),
   inclusions: stringList,
   exclusions: stringList,
   benefits: stringList,
@@ -112,6 +120,7 @@ export const brandSchema = z.object({
   name: requiredString(120, 2),
   slug: optionalString(140),
   logo: optionalString(600),
+  image: optionalString(600),
   country: optionalString(120),
   isFeatured: boolean.default(false),
   isActive: boolean.default(true),
@@ -132,7 +141,7 @@ export const vehicleModelSchema = z.object({
 export const customerSchema = z.object({
   name: requiredString(160, 2),
   phone: requiredString(40, 5),
-  email: optionalString(200),
+  email: optionalEmail,
   notes: optionalString(4000),
 });
 
@@ -142,12 +151,13 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 export const publicBookingSchema = z.object({
   customerName: requiredString(160, 2),
   phone: requiredString(40, 5),
-  email: optionalString(200),
+  email: optionalEmail,
   brandId: optionalString(64),
   brandName: requiredString(120, 1),
   modelName: requiredString(120, 1),
   year: z.coerce.number().int().min(1950).max(new Date().getFullYear() + 1),
   fuelType: requiredString(40, 2),
+  registrationNumber: optionalString(40),
   serviceId: requiredString(64, 3),
   packageId: optionalString(64),
   date: z.string().regex(dateRegex, 'Choose a valid date'),
@@ -178,13 +188,34 @@ export const bookingUpdateSchema = z.object({
   pickupAddress: optionalString(500),
   customerName: requiredString(160, 2).optional(),
   phone: requiredString(40, 5).optional(),
-  email: optionalString(200),
+  email: optionalEmail,
+  registrationNumber: optionalString(40),
+  expectedDeliveryAt: optionalDate,
+  assignedTo: optionalString(160),
+});
+
+export const bookingStageSchema = z.object({
+  stage: z.enum([
+    'PICKUP_SCHEDULED',
+    'VEHICLE_PICKED_UP',
+    'RECEIVED_AT_WORKSHOP',
+    'INITIAL_INSPECTION',
+    'ESTIMATE_APPROVAL',
+    'SERVICE_IN_PROGRESS',
+    'QUALITY_INSPECTION',
+    'READY_FOR_DELIVERY',
+    'OUT_FOR_DELIVERY',
+    'DELIVERED',
+  ]),
+  customerNote: optionalString(2000),
+  internalNote: optionalString(4000),
+  expectedDeliveryAt: optionalDate,
 });
 
 export const publicLeadSchema = z.object({
   name: requiredString(160, 2),
   phone: requiredString(40, 5),
-  email: optionalString(200),
+  email: optionalEmail,
   type: z
     .enum(['CONTACT', 'AMC', 'WHATSAPP', 'RENTAL', 'CAR_SALES', 'BUY_CAR', 'SELL_CAR', 'MARKETING'])
     .default('CONTACT'),
@@ -208,7 +239,7 @@ export const leadUpdateSchema = z.object({
   followUpAt: optionalDate,
   name: requiredString(160, 2).optional(),
   phone: requiredString(40, 5).optional(),
-  email: optionalString(200),
+  email: optionalEmail,
   type: z
     .enum(['SERVICE_BOOKING', 'CONTACT', 'AMC', 'WHATSAPP', 'RENTAL', 'CAR_SALES', 'BUY_CAR', 'SELL_CAR', 'MARKETING'])
     .optional(),
@@ -261,11 +292,15 @@ export const pageSectionSchema = z.object({
 
 export const bannerSchema = z.object({
   title: requiredString(240, 2),
+  eyebrow: optionalString(120),
   subtitle: optionalString(600),
   image: requiredString(600, 1),
   mobileImage: optionalString(600),
   ctaLabel: optionalString(120),
   ctaHref: optionalString(600),
+  secondaryLabel: optionalString(120),
+  secondaryHref: optionalString(600),
+  overlayOpacity: z.coerce.number().int().min(0).max(90).default(35),
   placement: requiredString(80).default('home-hero'),
   sortOrder,
   isActive: boolean.default(true),
@@ -293,7 +328,10 @@ export const testimonialSchema = z.object({
   vehicle: optionalString(160),
   rating: z.coerce.number().int().min(1).max(5),
   quote: requiredString(4000, 5),
+  image: optionalString(600),
+  reviewedAt: optionalDate,
   source: optionalString(120),
+  isFeatured: boolean.default(false),
   isPublished: boolean.default(true),
   sortOrder,
 });

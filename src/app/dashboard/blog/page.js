@@ -7,6 +7,7 @@ export default function BlogPage() {
   return (
     <ResourceManager
       resource="blog"
+      helpTopic="pages"
       eyebrow="Website content"
       title="Blog"
       description="Editorial articles for the public blog. Drafts stay hidden; publishing sets the date used in the blog listing and sitemap."

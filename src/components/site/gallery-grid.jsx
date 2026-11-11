@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X, Expand } from 'lucide-react';
 import { media } from '@/styles/theme';
 import { SmartImage } from '@/components/ui/smart-image';
+import { Carousel } from '@/components/ui/carousel';
 
 const Grid = styled.div`
   display: grid;
@@ -135,7 +136,7 @@ const Arrows = styled.div`
   }
 `;
 
-export function GalleryGrid({ items = [], columns = 2, largeColumns = 3, gap, priority = false }) {
+export function GalleryGrid({ items = [], columns = 2, largeColumns = 3, gap, priority = false, layout = 'grid' }) {
   const [active, setActive] = useState(null);
 
   const close = useCallback(() => setActive(null), []);
@@ -170,30 +171,42 @@ export function GalleryGrid({ items = [], columns = 2, largeColumns = 3, gap, pr
 
   if (!items.length) return null;
 
+  const renderTile = (item, index) => (
+    <Tile
+      key={item.id || item.url}
+      type="button"
+      onClick={() => setActive(index)}
+      aria-label={`Open image ${index + 1} of ${items.length}${item.alt ? `: ${item.alt}` : ''}`}
+      style={layout === 'carousel' ? { height: '100%' } : undefined}
+    >
+      <SmartImage
+        src={item.url}
+        alt={item.alt || ''}
+        ratio={layout === 'carousel' ? '4 / 3' : index % 5 === 0 ? '4 / 3' : '1 / 1'}
+        radius="none"
+        priority={priority && index < 3}
+        sizes={layout === 'carousel' ? '(max-width: 820px) 80vw, 34vw' : '(max-width: 820px) 50vw, 33vw'}
+      />
+      <Zoom className="zoom" aria-hidden="true">
+        <Expand size={15} />
+      </Zoom>
+    </Tile>
+  );
+
   return (
     <>
-      <Grid $cols={columns} $lg={largeColumns} $gap={gap}>
-        {items.map((item, index) => (
-          <Tile
-            key={item.id || item.url}
-            type="button"
-            onClick={() => setActive(index)}
-            aria-label={`Open image ${index + 1} of ${items.length}${item.alt ? `: ${item.alt}` : ''}`}
-          >
-            <SmartImage
-              src={item.url}
-              alt={item.alt || ''}
-              ratio={index % 5 === 0 ? '4 / 3' : '1 / 1'}
-              radius="none"
-              priority={priority && index < 3}
-              sizes="(max-width: 820px) 50vw, 33vw"
-            />
-            <Zoom className="zoom" aria-hidden="true">
-              <Expand size={15} />
-            </Zoom>
-          </Tile>
-        ))}
-      </Grid>
+      {layout === 'carousel' ? (
+        <Carousel
+          label="Workshop gallery"
+          items={items}
+          itemWidth="clamp(244px, 34vw, 380px)"
+          renderItem={renderTile}
+        />
+      ) : (
+        <Grid $cols={columns} $lg={largeColumns} $gap={gap}>
+          {items.map(renderTile)}
+        </Grid>
+      )}
 
       <AnimatePresence>
         {active !== null && items[active] ? (

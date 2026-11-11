@@ -9,6 +9,7 @@ export default function BannersPage() {
   return (
     <ResourceManager
       resource="banners"
+      helpTopic="banners"
       eyebrow="Website content"
       title="Banners"
       description="Hero slides and promotional banners. Only active banners inside their schedule window are shown on the website."
@@ -35,15 +36,19 @@ export default function BannersPage() {
       ]}
       fields={[
         { name: 'title', label: 'Title', required: true, span: 2 },
-        { name: 'subtitle', label: 'Subtitle', type: 'textarea', span: 2, rows: 2 },
-        { name: 'image', label: 'Desktop image', type: 'image', folder: 'banners', required: true },
-        { name: 'mobileImage', label: 'Mobile image', type: 'image', folder: 'banners' },
-        { name: 'ctaLabel', label: 'Button label' },
-        { name: 'ctaHref', label: 'Button link' },
+        { name: 'eyebrow', label: 'Eyebrow', placeholder: 'e.g. Workshop open in Al Quoz' },
+        { name: 'subtitle', label: 'Description', type: 'textarea', span: 2, rows: 2 },
+        { name: 'image', label: 'Desktop image', type: 'image', folder: 'banners', required: true, help: 'Recommended 1920×1080 or wider. The hero uses this on laptops and desktops.' },
+        { name: 'mobileImage', label: 'Mobile image', type: 'image', folder: 'banners', help: 'Optional portrait crop for phones. The desktop image is used when this is blank.' },
+        { name: 'ctaLabel', label: 'Primary button label' },
+        { name: 'ctaHref', label: 'Primary button link', placeholder: '/book' },
+        { name: 'secondaryLabel', label: 'Secondary button label' },
+        { name: 'secondaryHref', label: 'Secondary button link', placeholder: '/services' },
+        { name: 'overlayOpacity', label: 'Image overlay (%)', type: 'number', defaultValue: 35, help: 'Darkens the photo so text stays readable. 20–60 is usually best.' },
         { name: 'placement', label: 'Placement', type: 'select', options: PLACEMENTS, defaultValue: 'home-hero' },
-        { name: 'sortOrder', label: 'Sort order', type: 'number', defaultValue: 0 },
-        { name: 'startsAt', label: 'Start date', type: 'date' },
-        { name: 'endsAt', label: 'End date', type: 'date' },
+        { name: 'sortOrder', label: 'Sort order', type: 'number', defaultValue: 0, help: 'Lower numbers appear first in the hero.' },
+        { name: 'startsAt', label: 'Start date', type: 'date', help: 'Optional. The slide is hidden before this date.' },
+        { name: 'endsAt', label: 'End date', type: 'date', help: 'Optional. The slide is hidden after this date.' },
         { name: 'isActive', label: 'Active', type: 'checkbox', defaultValue: true },
       ]}
     />

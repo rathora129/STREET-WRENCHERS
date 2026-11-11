@@ -16,6 +16,7 @@ export default function PagesPage() {
   return (
     <ResourceManager
       resource="pages"
+      helpTopic="pages"
       eyebrow="Website content · CMS"
       title="Pages & sections"
       description="Website pages and their content sections. Seeded system pages power the live site; edits publish immediately when the page status is Published."

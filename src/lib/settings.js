@@ -68,6 +68,24 @@ export const SETTINGS_SCHEMAS = {
     pickupEnabled: z.boolean(),
     pickupNote: optionalText,
   }),
+  tracking: z.object({
+    templatePickupScheduled: optionalText,
+    templateVehiclePickedUp: optionalText,
+    templateReceivedAtWorkshop: optionalText,
+    templateInitialInspection: optionalText,
+    templateEstimateApproval: optionalText,
+    templateServiceInProgress: optionalText,
+    templateQualityInspection: optionalText,
+    templateReadyForDelivery: optionalText,
+    templateOutForDelivery: optionalText,
+    templateDelivered: optionalText,
+  }),
+  banner: z.object({
+    autoplay: z.boolean(),
+    intervalSeconds: z.coerce.number().int().min(3).max(20),
+    transition: z.enum(['fade', 'slide']),
+    transitionMs: z.coerce.number().int().min(200).max(2000),
+  }),
 };
 
 function isPlainObject(value) {

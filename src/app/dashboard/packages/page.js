@@ -7,6 +7,7 @@ export default function PackagesPage() {
   return (
     <ResourceManager
       resource="packages"
+      helpTopic="services"
       eyebrow="Catalogue"
       title="Service packages"
       description="Fixed-scope packages shown on service pages and the homepage. A package can be linked to a service or offered site-wide."

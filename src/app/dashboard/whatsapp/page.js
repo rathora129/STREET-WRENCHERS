@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 import { SettingsForm } from '@/components/dashboard/settings-form';
-import { DashButton, HeadText, Notice, PageHead, Panel, PanelBody } from '@/components/dashboard/ui';
+import { DashButton, HeadActions, HeadText, Notice, PageHead, Panel, PanelBody } from '@/components/dashboard/ui';
+import { HelpTip } from '@/components/dashboard/help';
 
 export default function WhatsappPage() {
   return (
@@ -17,9 +18,12 @@ export default function WhatsappPage() {
             WhatsApp clicks are recorded as analytics events.
           </p>
         </HeadText>
-        <DashButton as={Link} href="/dashboard/leads?type=WHATSAPP" $small>
-          WhatsApp leads
-        </DashButton>
+        <HeadActions>
+          <HelpTip topicId="whatsapp" />
+          <DashButton as={Link} href="/dashboard/leads?type=WHATSAPP" $small>
+            WhatsApp leads
+          </DashButton>
+        </HeadActions>
       </PageHead>
 
       <div style={{ display: 'grid', gap: 18 }}>

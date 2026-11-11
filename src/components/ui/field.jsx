@@ -47,12 +47,17 @@ const control = `
   transition: border-color 160ms ease, background 160ms ease;
   appearance: none;
 
-  &::placeholder { color: #5f5d58; }
+  &::placeholder { color: #8a867f; }
 
   &:focus {
     outline: none;
     border-color: #f26a0d;
     background: #0f0f13;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #f26a0d;
+    outline-offset: 1px;
   }
 
   &:disabled { opacity: 0.55; cursor: not-allowed; }

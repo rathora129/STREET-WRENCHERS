@@ -120,7 +120,7 @@ export function AmcDetail({ plan }) {
         eyebrow="Annual maintenance"
         heading={`${plan.name} plan`}
         subheading={plan.tagline || plan.description}
-        image="/assets/images/hero/engine.jpg"
+        image={plan.image || '/assets/images/hero/engine.jpg'}
         breadcrumbs={[
           { label: 'Home', href: '/' },
           { label: 'AMC Plans', href: '/amc' },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import styled from 'styled-components';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -17,27 +17,41 @@ const Hero = styled.section`
   overflow: hidden;
   isolation: isolate;
   background: #08080a;
+  touch-action: pan-y;
 
   ${media.lg} {
     min-height: max(720px, 92svh);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
 `;
 
-const Media = styled.div`
+const Stack = styled.div`
   position: absolute;
   inset: 0;
   z-index: -2;
+`;
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(90deg, rgba(8, 8, 10, 0.92) 0%, rgba(8, 8, 10, 0.55) 48%, rgba(8, 8, 10, 0.15) 100%),
-      linear-gradient(180deg, rgba(8, 8, 10, 0.72) 0%, rgba(8, 8, 10, 0.12) 35%, rgba(8, 8, 10, 0.95) 100%);
+const SlideLayer = styled(motion.div)`
+  position: absolute;
+  inset: 0;
+  will-change: opacity, transform;
+
+  .desktop { object-fit: cover; }
+  .mobile { display: none; object-fit: cover; }
+
+  @media (max-width: 700px) {
+    .desktop { display: ${({ $hasMobile }) => ($hasMobile ? 'none' : 'block')}; }
+    .mobile { display: ${({ $hasMobile }) => ($hasMobile ? 'block' : 'none')}; }
   }
+`;
 
-  img { object-fit: cover; }
+const Shade = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 `;
 
 const Grain = styled.div`
@@ -54,6 +68,8 @@ const Inner = styled.div`
   max-width: ${({ theme }) => theme.layout.container};
   margin-inline: auto;
   padding: calc(${({ theme }) => theme.layout.header} + 40px) ${({ theme }) => theme.layout.gutter} 44px;
+  position: relative;
+  z-index: 1;
 `;
 
 const Content = styled.div`
@@ -94,7 +110,8 @@ const Controls = styled.div`
 const Dots = styled.div`
   display: flex;
   align-items: center;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 18px;
 `;
 
 const Dot = styled.button`
@@ -109,6 +126,7 @@ const Dot = styled.button`
   letter-spacing: 0.16em;
   color: ${({ $active, theme }) => ($active ? theme.colors.white : theme.colors.dim)};
   transition: color 200ms ease;
+  cursor: pointer;
 
   &::after {
     content: '';
@@ -120,6 +138,7 @@ const Dot = styled.button`
   }
 
   &:hover { color: ${({ theme }) => theme.colors.white}; }
+  &:focus-visible { outline: 2px solid ${({ theme }) => theme.colors.brand}; outline-offset: 4px; }
 `;
 
 const Arrows = styled.div`
@@ -138,12 +157,15 @@ const ArrowBtn = styled.button`
   display: grid;
   place-items: center;
   transition: background 200ms ease, border-color 200ms ease;
+  cursor: pointer;
 
   &:hover {
     background: ${({ theme }) => theme.colors.brand};
     border-color: ${({ theme }) => theme.colors.brand};
-    color: #0b0b0d;
+    color: #ffffff;
   }
+
+  &:focus-visible { outline: 2px solid ${({ theme }) => theme.colors.brand}; outline-offset: 3px; }
 `;
 
 const ScrollCue = styled.div`
@@ -170,35 +192,82 @@ const ScrollCue = styled.div`
 `;
 
 const fallbackSlide = {
+  id: 'fallback',
   title: 'Precision care, built around your car.',
   subtitle:
     'Scheduled servicing, diagnostics, repair and detailing under one roof — for every make and model on Dubai roads.',
   image: '/assets/images/hero/workshop.jpg',
   ctaLabel: 'Book a service',
   ctaHref: '/book',
+  overlayOpacity: 50,
 };
 
-export function HeroSlider({ banners = [], section = {} }) {
+function overlayStyle(value) {
+  const strength = Math.min(90, Math.max(0, Number(value ?? 35))) / 100;
+  const left = Math.min(0.97, strength + 0.52);
+  const mid = Math.min(0.9, strength + 0.08);
+  const top = Math.min(0.95, strength + 0.3);
+  return {
+    background: `linear-gradient(90deg, rgba(8,8,10,${left}) 0%, rgba(8,8,10,${mid}) 52%, rgba(8,8,10,0.12) 100%), linear-gradient(180deg, rgba(8,8,10,${top}) 0%, rgba(8,8,10,0.1) 36%, rgba(8,8,10,0.95) 100%)`,
+  };
+}
+
+export function HeroSlider({ banners = [], section = {}, options = {} }) {
   const slides = banners.length ? banners : [fallbackSlide];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const reduce = useReducedMotion();
+  const touch = useRef({ x: 0, y: 0, tracking: false });
 
-  useEffect(() => {
-    if (paused || reduce || slides.length < 2) return undefined;
-    const timer = setInterval(() => setIndex((current) => (current + 1) % slides.length), 7000);
-    return () => clearInterval(timer);
-  }, [paused, reduce, slides.length]);
+  const autoplay = options.autoplay !== false;
+  const interval = Math.min(20, Math.max(3, Number(options.intervalSeconds) || 7)) * 1000;
+  const transition = options.transition === 'slide' ? 'slide' : 'fade';
+  const duration = Math.min(2, Math.max(0.2, (Number(options.transitionMs) || 800) / 1000));
+  const multi = slides.length > 1;
 
   useEffect(() => {
     setIndex(0);
   }, [banners.length]);
 
-  const slide = slides[index] || slides[0];
-  const secondaryLabel = section?.secondaryLabel || 'Explore services';
-  const secondaryHref = section?.secondaryHref || '/services';
+  useEffect(() => {
+    const onVisibility = () => setHidden(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
-  const go = (direction) => setIndex((current) => (current + direction + slides.length) % slides.length);
+  useEffect(() => {
+    if (!autoplay || paused || reduce || hidden || !multi) return undefined;
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % slides.length);
+    }, interval);
+    return () => window.clearInterval(timer);
+  }, [autoplay, paused, reduce, hidden, multi, interval, slides.length]);
+
+  const go = useCallback(
+    (direction) => {
+      setIndex((current) => (current + direction + slides.length) % slides.length);
+    },
+    [slides.length],
+  );
+
+  const onPointerDown = (event) => {
+    if (event.pointerType === 'mouse') return;
+    touch.current = { x: event.clientX, y: event.clientY, tracking: true };
+  };
+
+  const onPointerUp = (event) => {
+    if (!touch.current.tracking) return;
+    const dx = event.clientX - touch.current.x;
+    const dy = event.clientY - touch.current.y;
+    touch.current.tracking = false;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+  };
+
+  const slide = slides[index] || slides[0];
+  const secondaryLabel = slide.secondaryLabel || section.secondaryLabel || 'Explore services';
+  const secondaryHref = slide.secondaryHref || section.secondaryHref || '/services';
+  const eyebrow = slide.eyebrow || section.eyebrow || 'Dubai, UAE — Multi-brand auto care';
 
   return (
     <Hero
@@ -207,76 +276,114 @@ export function HeroSlider({ banners = [], section = {} }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false);
+      }}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => {
+        touch.current.tracking = false;
+      }}
+      onKeyDown={(event) => {
+        if (!multi) return;
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          go(-1);
+        }
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          go(1);
+        }
+      }}
     >
-      <Media>
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={slide.image || index}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.1, ease: 'easeOut' }}
-            style={{ position: 'absolute', inset: 0 }}
-          >
-            <Image
-              src={slide.image || fallbackSlide.image}
-              alt=""
-              fill
-              priority={index === 0}
-              sizes="100vw"
-              style={{ objectFit: 'cover', objectPosition: 'center' }}
-            />
-          </motion.div>
-        </AnimatePresence>
-      </Media>
+      <Stack aria-live="off">
+        {slides.map((item, slideIndex) => {
+          const active = slideIndex === index;
+          const x = transition === 'slide' ? (active ? '0%' : slideIndex < index ? '-100%' : '100%') : 0;
+          return (
+            <SlideLayer
+              key={item.id || `${item.title}-${slideIndex}`}
+              $hasMobile={Boolean(item.mobileImage)}
+              initial={false}
+              animate={{ opacity: active ? 1 : 0, x }}
+              transition={{ duration: reduce ? 0 : duration, ease: [0.16, 1, 0.3, 1] }}
+              aria-hidden={!active}
+            >
+              <Image
+                className="desktop"
+                src={item.image || fallbackSlide.image}
+                alt={item.title || ''}
+                fill
+                priority={slideIndex === 0}
+                sizes="100vw"
+              />
+              {item.mobileImage ? (
+                <Image
+                  className="mobile"
+                  src={item.mobileImage}
+                  alt=""
+                  fill
+                  priority={slideIndex === 0}
+                  sizes="100vw"
+                />
+              ) : null}
+              <Shade style={overlayStyle(item.overlayOpacity)} />
+            </SlideLayer>
+          );
+        })}
+      </Stack>
       <Grain aria-hidden="true" />
 
       <Inner>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 24 }}
+            key={slide.id || index}
+            initial={reduce ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
+            transition={{ duration: reduce ? 0 : 0.55, ease: [0.16, 1, 0.3, 1] }}
           >
             <Content>
-              <Eyebrow>{section?.eyebrow || 'Dubai, UAE — Multi-brand auto care'}</Eyebrow>
+              <Eyebrow>{eyebrow}</Eyebrow>
               <Title $size="xl" $width="16ch">{slide.title}</Title>
-              <Sub>{slide.subtitle}</Sub>
+              {slide.subtitle ? <Sub>{slide.subtitle}</Sub> : null}
               <Actions>
                 <Button href={slide.ctaHref || '/book'} size="lg">{slide.ctaLabel || 'Book a service'}</Button>
-                <Button href={secondaryHref} variant="outline" size="lg">{secondaryLabel}</Button>
+                {secondaryLabel && secondaryHref ? (
+                  <Button href={secondaryHref} variant="outline" size="lg">{secondaryLabel}</Button>
+                ) : null}
               </Actions>
             </Content>
           </motion.div>
         </AnimatePresence>
 
-        <Controls>
-          <Dots>
-            {slides.map((item, slideIndex) => (
-              <Dot
-                key={item.id || item.title}
-                type="button"
-                $active={slideIndex === index}
-                onClick={() => setIndex(slideIndex)}
-                aria-label={`Go to slide ${slideIndex + 1}`}
-                aria-current={slideIndex === index}
-              >
-                {String(slideIndex + 1).padStart(2, '0')}
-              </Dot>
-            ))}
-          </Dots>
-          <Arrows>
-            <ArrowBtn type="button" onClick={() => go(-1)} aria-label="Previous slide">
-              <ArrowLeft size={17} />
-            </ArrowBtn>
-            <ArrowBtn type="button" onClick={() => go(1)} aria-label="Next slide">
-              <ArrowRight size={17} />
-            </ArrowBtn>
-          </Arrows>
-        </Controls>
+        {multi ? (
+          <Controls>
+            <Dots role="tablist" aria-label="Choose a hero slide">
+              {slides.map((item, slideIndex) => (
+                <Dot
+                  key={item.id || `${item.title}-dot`}
+                  type="button"
+                  role="tab"
+                  aria-selected={slideIndex === index}
+                  aria-label={`Slide ${slideIndex + 1} of ${slides.length}: ${item.title}`}
+                  $active={slideIndex === index}
+                  onClick={() => setIndex(slideIndex)}
+                >
+                  {String(slideIndex + 1).padStart(2, '0')}
+                </Dot>
+              ))}
+            </Dots>
+            <Arrows>
+              <ArrowBtn type="button" onClick={() => go(-1)} aria-label="Previous slide">
+                <ArrowLeft size={17} />
+              </ArrowBtn>
+              <ArrowBtn type="button" onClick={() => go(1)} aria-label="Next slide">
+                <ArrowRight size={17} />
+              </ArrowBtn>
+            </Arrows>
+          </Controls>
+        ) : null}
       </Inner>
 
       <ScrollCue aria-hidden="true">Scroll to explore</ScrollCue>

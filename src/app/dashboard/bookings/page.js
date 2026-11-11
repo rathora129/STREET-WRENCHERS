@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ResourceManager } from '@/components/dashboard/resource-manager';
 import { MainCell, StatusBadge } from '@/components/dashboard/cells';
 import { RowLink } from '@/components/dashboard/ui';
+import { BOOKING_STAGES, stageMeta } from '@/lib/booking-stages';
 
 const STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
@@ -11,6 +12,7 @@ export default function BookingsPage() {
   return (
     <ResourceManager
       resource="bookings"
+      helpTopic="bookings"
       eyebrow="Operations"
       title="Bookings"
       description="Every service booking submitted through the website. Update the status, appointment details, estimate and internal notes."
@@ -41,6 +43,11 @@ export default function BookingsPage() {
           },
         },
         { key: 'priceEstimate', label: 'Estimate', type: 'price', align: 'right' },
+        {
+          key: 'currentStage',
+          label: 'Service stage',
+          render: (row) => <MainCell primary={stageMeta(row.currentStage).customerLabel} sub={row.registrationNumber} />,
+        },
         { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
       ]}
       filters={[
@@ -48,6 +55,11 @@ export default function BookingsPage() {
           name: 'status',
           label: 'statuses',
           options: STATUSES.map((status) => ({ value: status, label: status.replace('_', ' ') })),
+        },
+        {
+          name: 'currentStage',
+          label: 'stages',
+          options: BOOKING_STAGES.map((stage) => ({ value: stage.key, label: stage.label })),
         },
       ]}
       rowActions={(row) => (

@@ -53,8 +53,16 @@ export async function getPage(slug) {
 }
 
 export async function getBanners(placement = 'home-hero') {
+  const now = new Date();
   return prisma.banner.findMany({
-    where: { placement, isActive: true },
+    where: {
+      placement,
+      isActive: true,
+      AND: [
+        { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+        { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+      ],
+    },
     orderBy: { sortOrder: 'asc' },
   });
 }
@@ -157,6 +165,16 @@ export async function getBrands() {
   });
 }
 
+export async function getBrandBySlug(slug) {
+  return prisma.brand.findFirst({
+    where: { slug, isActive: true },
+    include: {
+      models: { where: { isActive: true }, orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] },
+      amcPlans: { where: { isPublished: true }, orderBy: { sortOrder: 'asc' } },
+    },
+  });
+}
+
 export async function getGalleryMedia() {
   return prisma.media.findMany({
     where: { folder: 'gallery' },
@@ -184,7 +202,7 @@ export async function getBlogBySlug(slug) {
 export async function getPublishedTestimonials() {
   return prisma.testimonial.findMany({
     where: { isPublished: true },
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }, { reviewedAt: 'desc' }, { createdAt: 'desc' }],
   });
 }
 

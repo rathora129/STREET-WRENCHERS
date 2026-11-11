@@ -4,19 +4,22 @@ import Link from 'next/link';
 import styled from 'styled-components';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowUpRight,
+  Activity,
+  BadgeCheck,
   CalendarCheck2,
   Car,
   CheckCircle2,
+  ClipboardCheck,
   Clock3,
   Eye,
   MessageCircle,
-  ShieldCheck,
+  PackageCheck,
   Users,
   Wrench,
 } from 'lucide-react';
 import { media } from '@/styles/theme';
 import { formatPrice } from '@/lib/utils';
+import { stageMeta } from '@/lib/booking-stages';
 import {
   DashButton,
   HeadActions,
@@ -31,11 +34,10 @@ import {
   StatCard,
   TableWrap,
   ToneBadge,
-  TwoCol,
   formatDateCell,
   formatDateTimeCell,
-  Notice,
 } from './ui';
+import { HelpTip } from './help';
 
 const MiniList = styled.ul`
   display: flex;
@@ -52,17 +54,15 @@ const MiniList = styled.ul`
     &:last-child { border-bottom: 0; }
   }
 
-  .who { font-size: 12.5px; color: ${({ theme }) => theme.colors.white}; font-weight: 500; }
-  .what { margin-top: 2px; font-size: 11.5px; color: ${({ theme }) => theme.colors.dim}; line-height: 1.5; }
+  .who { display: block; font-size: 12.5px; color: ${({ theme }) => theme.colors.white}; font-weight: 500; }
+  .what { display: block; margin-top: 2px; font-size: 11.5px; color: ${({ theme }) => theme.colors.dim}; line-height: 1.5; }
   .when { flex: none; font-size: 10.5px; color: ${({ theme }) => theme.colors.dim}; text-align: right; white-space: nowrap; }
 `;
 
 const ModuleGrid = styled.div`
   display: grid;
-  gap: 10px;
+  gap: 8px;
   grid-template-columns: 1fr;
-
-  ${media.md} { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 `;
 
 const ModuleCard = styled(Link)`
@@ -81,35 +81,92 @@ const ModuleCard = styled(Link)`
   &:hover { border-color: ${({ theme }) => theme.colors.lineStrong}; }
 `;
 
-const QuickGrid = styled.div`
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  ${media.lg} { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-`;
-
-const QuickLink = styled(Link)`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid ${({ theme }) => theme.colors.line};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.colors.charcoal};
-  color: ${({ theme }) => theme.colors.smoke};
-  font-size: 12px;
-
-  svg { color: ${({ theme }) => theme.colors.brand}; }
-  &:hover { border-color: ${({ theme }) => theme.colors.lineStrong}; color: ${({ theme }) => theme.colors.white}; }
-`;
-
 const Split = styled.div`
   display: grid;
   gap: 16px;
   margin-top: 16px;
 
   ${media.lg} { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+`;
+
+const StageList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 16px 18px 18px;
+`;
+
+const StageRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(118px, 158px) minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+
+  .label {
+    color: ${({ theme }) => theme.colors.smoke};
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .track {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+  }
+
+  .fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, ${({ theme }) => theme.colors.brandDeep}, ${({ theme }) => theme.colors.brand});
+    min-width: ${({ $count }) => ($count > 0 ? '4px' : '0')};
+  }
+
+  .count {
+    text-align: right;
+    color: ${({ theme }) => theme.colors.white};
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+const MetricsGrid = styled.div`
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  ${media.md} { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: ${({ theme }) => theme.colors.dim};
+  }
+
+  strong {
+    font-family: ${({ theme }) => theme.fonts.display};
+    font-size: clamp(1.3rem, 2vw, 1.65rem);
+    letter-spacing: -0.03em;
+    color: ${({ theme }) => theme.colors.white};
+  }
+
+  .hint {
+    font-size: 11px;
+    line-height: 1.5;
+    color: ${({ theme }) => theme.colors.dim};
+  }
 `;
 
 const STATUS_TONE = {
@@ -150,7 +207,7 @@ export function OverviewView() {
     );
   }
 
-  const { counts, recentBookings, recentLeads, upcoming, modules } = data;
+  const { counts, recentBookings, recentLeads, upcoming, modules, stageBreakdown = [], recentActivity = [] } = data;
   const today = new Intl.DateTimeFormat('en-AE', {
     timeZone: 'Asia/Dubai',
     weekday: 'long',
@@ -159,15 +216,32 @@ export function OverviewView() {
     year: 'numeric',
   }).format(new Date());
 
+  const stats = [
+    { label: 'Today’s bookings', value: counts.todayBookings, hint: 'Appointments dated today', icon: CalendarCheck2 },
+    { label: 'Pending bookings', value: counts.pendingBookings, hint: 'Awaiting team confirmation', icon: Clock3 },
+    { label: 'Confirmed bookings', value: counts.confirmedBookings, hint: 'Confirmed appointments', icon: BadgeCheck },
+    { label: 'Active services', value: counts.activeServices, hint: 'Published on the website', icon: Wrench },
+    { label: 'Vehicles in workshop', value: counts.vehiclesInWorkshop, hint: 'Pickup through quality check', icon: Car },
+    { label: 'Awaiting approval', value: counts.awaitingApproval, hint: 'Estimates with customers', icon: ClipboardCheck },
+    { label: 'Ready for delivery', value: counts.readyForDelivery, hint: 'Waiting for handover', icon: PackageCheck },
+    { label: 'Completed bookings', value: counts.completedBookings, hint: 'Lifetime completed jobs', icon: CheckCircle2 },
+    { label: 'New enquiries', value: counts.newLeads, hint: `${counts.totalCustomers} customers in CRM`, icon: Users },
+    { label: 'Page views · 7 days', value: counts.pageViews, hint: `${counts.whatsappClicks} WhatsApp clicks`, icon: Eye },
+  ];
+
+  const stageTotal = stageBreakdown.reduce((sum, stage) => sum + stage.count, 0);
+  const stageMax = Math.max(1, ...stageBreakdown.map((stage) => stage.count));
+
   return (
     <>
       <PageHead>
         <HeadText>
           <span className="eyebrow">{today} · Dubai</span>
           <h1>Workshop overview</h1>
-          <p>Live bookings, customer enquiries and website activity from the Street Wrenchers database.</p>
+          <p>Live bookings, workshop stages, customer enquiries and website activity from the Street Wrenchers database.</p>
         </HeadText>
         <HeadActions>
+          <HelpTip topicId="dashboard" />
           <DashButton as={Link} href="/dashboard/bookings" $small>
             <CalendarCheck2 size={14} /> Bookings
           </DashButton>
@@ -178,46 +252,17 @@ export function OverviewView() {
       </PageHead>
 
       <StatsGrid>
-        <StatCard>
-          <div className="top"><span>Today’s bookings</span><CalendarCheck2 size={16} /></div>
-          <span className="value">{counts.todayBookings}</span>
-          <span className="hint">{counts.pendingBookings} pending or confirmed</span>
-        </StatCard>
-        <StatCard>
-          <div className="top"><span>New leads</span><Users size={16} /></div>
-          <span className="value">{counts.newLeads}</span>
-          <span className="hint">{counts.totalCustomers} customers in CRM</span>
-        </StatCard>
-        <StatCard>
-          <div className="top"><span>Completed revenue</span><CheckCircle2 size={16} /></div>
-          <span className="value">{counts.completedRevenue === null || counts.completedRevenue === undefined ? '—' : formatPrice(counts.completedRevenue)}</span>
-          <span className="hint">From completed bookings</span>
-        </StatCard>
-        <StatCard>
-          <div className="top"><span>Page views · 7 days</span><Eye size={16} /></div>
-          <span className="value">{counts.pageViews}</span>
-          <span className="hint">{counts.whatsappClicks} WhatsApp clicks</span>
-        </StatCard>
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <StatCard key={stat.label}>
+              <div className="top"><span>{stat.label}</span><Icon size={16} /></div>
+              <span className="value">{stat.value}</span>
+              <span className="hint">{stat.hint}</span>
+            </StatCard>
+          );
+        })}
       </StatsGrid>
-
-      <QuickGrid style={{ marginTop: 16 }}>
-        <QuickLink href="/dashboard/services">
-          <Wrench size={16} />
-          <span>{counts.publishedServices} published services</span>
-        </QuickLink>
-        <QuickLink href="/dashboard/blog">
-          <ShieldCheck size={16} />
-          <span>{counts.publishedBlogs} published articles</span>
-        </QuickLink>
-        <QuickLink href="/dashboard/bookings">
-          <Car size={16} />
-          <span>{counts.totalBookings} lifetime bookings</span>
-        </QuickLink>
-        <QuickLink href="/dashboard/modules">
-          <Clock3 size={16} />
-          <span>Manage future modules</span>
-        </QuickLink>
-      </QuickGrid>
 
       <Split>
         <Panel>
@@ -271,7 +316,7 @@ export function OverviewView() {
         <Panel>
           <PanelHead>
             <h2>New enquiries</h2>
-            <Link href="/dashboard/leads">View CRM</Link>
+            <Link href="/dashboard/leads">View CRM ({counts.newLeads} new)</Link>
           </PanelHead>
           {recentLeads.length ? (
             <MiniList>
@@ -296,6 +341,73 @@ export function OverviewView() {
               <MessageCircle size={24} />
               <h3>No enquiries yet</h3>
               <p>Contact, AMC and module enquiries will be listed here.</p>
+            </StateBox>
+          )}
+        </Panel>
+      </Split>
+
+      <Split>
+        <Panel>
+          <PanelHead>
+            <h2>Service stage breakdown</h2>
+            <Link href="/dashboard/bookings">Manage bookings</Link>
+          </PanelHead>
+          {stageTotal > 0 ? (
+            <StageList>
+              {stageBreakdown.map((stage) => (
+                <StageRow key={stage.key} $count={stage.count}>
+                  <span className="label">{stage.label}</span>
+                  <span className="track" aria-hidden="true">
+                    <span className="fill" style={{ width: `${Math.round((stage.count / stageMax) * 100)}%` }} />
+                  </span>
+                  <span className="count">{stage.count}</span>
+                </StageRow>
+              ))}
+            </StageList>
+          ) : (
+            <StateBox>
+              <Wrench size={24} />
+              <h3>No stage activity yet</h3>
+              <p>Stage counts appear once bookings enter the workshop workflow.</p>
+            </StateBox>
+          )}
+        </Panel>
+
+        <Panel>
+          <PanelHead>
+            <h2>Recent activity</h2>
+            <Link href="/dashboard/bookings">Booking updates</Link>
+          </PanelHead>
+          {recentActivity.length ? (
+            <MiniList>
+              {recentActivity.map((event) => (
+                <li key={event.id}>
+                  <div>
+                    <span className="who">{event.booking?.reference || 'Booking'}</span>
+                    <span className="what">
+                      {event.booking?.customerName ? `${event.booking.customerName} · ` : ''}
+                      {stageMeta(event.stage).label}
+                      {event.updatedBy ? ` · ${event.updatedBy}` : ''}
+                    </span>
+                  </div>
+                  <div className="when">
+                    {formatDateCell(event.createdAt)}
+                    <br />
+                    {new Intl.DateTimeFormat('en-AE', {
+                      timeZone: 'Asia/Dubai',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true,
+                    }).format(new Date(event.createdAt))}
+                  </div>
+                </li>
+              ))}
+            </MiniList>
+          ) : (
+            <StateBox>
+              <Activity size={24} />
+              <h3>No stage updates yet</h3>
+              <p>Stage changes and customer-visible updates will appear here.</p>
             </StateBox>
           )}
         </Panel>
@@ -367,13 +479,36 @@ export function OverviewView() {
         </Panel>
       </Split>
 
-      {counts.completedRevenue === null ? (
-        <div style={{ marginTop: 16 }}>
-          <Notice>
-            Revenue is calculated only from completed bookings that have a price estimate recorded. No fabricated figures are shown.
-          </Notice>
-        </div>
-      ) : null}
+      <Panel style={{ marginTop: 16 }}>
+        <PanelHead>
+          <h2>Website &amp; revenue</h2>
+          <Link href="/dashboard/analytics">Analytics</Link>
+        </PanelHead>
+        <PanelBody>
+          <MetricsGrid>
+            <div>
+              <span className="label">Completed revenue</span>
+              <strong>{counts.completedRevenue === null || counts.completedRevenue === undefined ? '—' : formatPrice(counts.completedRevenue)}</strong>
+              <span className="hint">Completed bookings with a recorded estimate</span>
+            </div>
+            <div>
+              <span className="label">Total bookings</span>
+              <strong>{counts.totalBookings}</strong>
+              <span className="hint">Lifetime booking records</span>
+            </div>
+            <div>
+              <span className="label">Page views · 7 days</span>
+              <strong>{counts.pageViews}</strong>
+              <span className="hint">Recorded website visits</span>
+            </div>
+            <div>
+              <span className="label">WhatsApp clicks · 7 days</span>
+              <strong>{counts.whatsappClicks}</strong>
+              <span className="hint">Click-to-chat actions</span>
+            </div>
+          </MetricsGrid>
+        </PanelBody>
+      </Panel>
     </>
   );
 }

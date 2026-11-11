@@ -7,6 +7,7 @@ export default function ModelsPage() {
   return (
     <ResourceManager
       resource="models"
+      helpTopic="brands"
       eyebrow="Catalogue"
       title="Vehicle models"
       description="Models help customers pick their vehicle quickly during booking and show AMC compatibility."

@@ -45,7 +45,7 @@ const base = css`
 const variants = {
   primary: css`
     background: ${({ theme }) => theme.colors.brand};
-    color: #0b0b0d;
+    color: #ffffff;
     border-color: ${({ theme }) => theme.colors.brand};
 
     ${media.hover} {

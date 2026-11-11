@@ -4,6 +4,7 @@ import { publicBookingSchema } from '@/lib/validation/resources';
 import { ApiError, clientIp, created, readJson, route } from '@/lib/http';
 import { getSettings } from '@/lib/settings';
 import { BOOKING_TIMES } from '@/lib/site';
+import { createTrackingToken, trackingUrlFor } from '@/lib/tracking';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -92,8 +93,26 @@ export const POST = route(async (request) => {
   const phone = normalisePhone(payload.phone);
   if (phone.length < 5) throw new ApiError(422, 'Enter a valid phone number');
 
+  const recentDuplicate = await prisma.booking.findFirst({
+    where: {
+      phone,
+      serviceId: service.id,
+      preferredDate,
+      preferredTime: payload.time,
+      createdAt: { gte: new Date(now - 10 * 60 * 1000) },
+    },
+    select: { reference: true },
+  });
+  if (recentDuplicate) {
+    throw new ApiError(
+      409,
+      `A request for this slot was just submitted (reference ${recentDuplicate.reference}). Please wait for the team to confirm instead of submitting again.`,
+    );
+  }
+
   const priceEstimate = pack?.price ?? service.price ?? null;
   const reference = await nextReference(preferredDate);
+  const trackingToken = createTrackingToken();
 
   const booking = await prisma.$transaction(async (tx) => {
     const customer = await tx.customer.upsert({
@@ -116,6 +135,8 @@ export const POST = route(async (request) => {
     const record = await tx.booking.create({
       data: {
         reference,
+        trackingToken,
+        currentStage: 'PICKUP_SCHEDULED',
         customerId: customer.id,
         customerName: payload.customerName,
         phone,
@@ -125,6 +146,7 @@ export const POST = route(async (request) => {
         modelName: payload.modelName,
         year: payload.year,
         fuelType: payload.fuelType,
+        registrationNumber: payload.registrationNumber || null,
         serviceId: service.id,
         serviceName: service.name,
         packageId: pack?.id || null,
@@ -138,6 +160,15 @@ export const POST = route(async (request) => {
         source: payload.source || 'website',
         utm: payload.utm || undefined,
         status: 'PENDING',
+      },
+    });
+
+    await tx.bookingStageEvent.create({
+      data: {
+        bookingId: record.id,
+        stage: 'PICKUP_SCHEDULED',
+        customerNote: 'Your booking has been received. The team will confirm the appointment and pickup details.',
+        updatedBy: 'Website booking',
       },
     });
 
@@ -177,11 +208,12 @@ export const POST = route(async (request) => {
 
   return created({
     reference: booking.reference,
-    id: booking.id,
     status: booking.status,
+    currentStage: booking.currentStage,
     serviceName: booking.serviceName,
     packageName: booking.packageName,
     preferredDate: booking.preferredDate,
     preferredTime: booking.preferredTime,
+    trackingUrl: trackingUrlFor(trackingToken),
   });
 });

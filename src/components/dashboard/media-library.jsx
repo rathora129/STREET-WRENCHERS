@@ -17,6 +17,7 @@ import {
   StateBox,
   Spinner,
 } from './ui';
+import { HelpTip } from './help';
 
 const Grid = styled.div`
   display: grid;
@@ -226,9 +227,12 @@ export function MediaLibrary() {
             filesystem is never used for uploads.
           </p>
         </HeadText>
-        <DashButton $small type="button" onClick={() => setLinkOpen(true)}>
-          <Link2 size={14} /> Add by URL
-        </DashButton>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <HelpTip topicId="media" />
+          <DashButton $small type="button" onClick={() => setLinkOpen(true)}>
+            <Link2 size={14} /> Add by URL
+          </DashButton>
+        </div>
       </PageHead>
 
       {flash ? <div style={{ marginBottom: 14 }}><Notice $tone="success">{flash}</Notice></div> : null}
